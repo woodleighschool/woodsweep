@@ -90,6 +90,7 @@
 				41187B0B2FBEF48D00E650FC /* Sources */,
 				41187B0C2FBEF48D00E650FC /* Frameworks */,
 				41187B0D2FBEF48D00E650FC /* Resources */,
+				D20000012F00000000E650FC /* Fetch Kopia */,
 			);
 			buildRules = (
 			);
@@ -183,6 +184,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D20000012F00000000E650FC /* Fetch Kopia */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/fetch-kopia.sh",
+			);
+			name = "Fetch Kopia";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_FOLDER_PATH)/kopia",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Kopia-LICENSE.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/scripts/fetch-kopia.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		41187B0B2FBEF48D00E650FC /* Sources */ = {
