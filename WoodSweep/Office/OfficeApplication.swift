@@ -49,7 +49,6 @@ nonisolated struct OfficeApplicationStatus:
     let application: OfficeApplication
     // periphery:ignore
     let isRunning: Bool
-    // periphery:ignore
     let isWaitingForTermination: Bool
 
     var id: OfficeApplication {

@@ -1,5 +1,4 @@
 nonisolated enum ResetOperation: Equatable, Sendable {
-    // periphery:ignore
     case checkingConnection
     case backingUp
     case resettingWord
@@ -11,7 +10,6 @@ nonisolated enum ResetOperation: Equatable, Sendable {
 
 nonisolated struct ResetFailure: Equatable, Sendable {
     let operation: ResetOperation
-    // periphery:ignore
     let message: String
     let canRetry: Bool
 }
