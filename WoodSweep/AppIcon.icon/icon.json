@@ -7,16 +7,14 @@
       "layers" : [
         {
           "blend-mode" : "normal",
-          "fill" : {
-            "solid" : "extended-gray:1.00000,1.00000"
-          },
-          "image-name" : "Untitled-2 4.svg",
+          "fill" : "automatic",
+          "image-name" : "woodstar.svg",
           "name" : "Icon",
           "position" : {
-            "scale" : 0.75,
+            "scale" : 0.68,
             "translation-in-points" : [
-              0,
-              0
+              100,
+              29
             ]
           }
         }
