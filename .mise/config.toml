@@ -1,0 +1,64 @@
+[tools]
+node = "26.5.0"
+periphery = "3.8.0"
+swiftformat = "0.62.1"
+lefthook = "2.1.10"
+zizmor = "1.28.0"
+oxfmt = "0.60.0"
+shellcheck = "0.11.0"
+"npm:@commitlint/cli" = "21.2.1"
+
+[settings]
+experimental = true
+pin = true
+lockfile = true
+minimum_release_age = "12 hours"
+
+[tasks.format]
+description = "Format Swift and repository text files"
+run = ["swiftformat WoodSweep WoodSweepTests", "oxfmt ."]
+
+[tasks.fmt-check]
+description = "Check Swift and repository text formatting"
+run = ["swiftformat WoodSweep WoodSweepTests --lint", "oxfmt --check ."]
+
+[tasks.periphery]
+description = "Build the app and reject unused Swift code"
+run = """
+periphery scan \
+  --project WoodSweep.xcodeproj \
+  --schemes WoodSweep \
+  --format xcode \
+  --strict \
+  --disable-update-check \
+  --relative-results \
+  -- \
+  -destination 'platform=macOS' \
+  CODE_SIGNING_ALLOWED=NO
+"""
+
+[tasks.test]
+description = "Run focused Swift tests"
+run = """
+xcodebuild test \
+  -project WoodSweep.xcodeproj \
+  -scheme WoodSweep \
+  -destination 'platform=macOS' \
+  -derivedDataPath "$PWD/.build/DerivedData" \
+  CODE_SIGNING_ALLOWED=NO
+"""
+
+[tasks.shell-lint]
+description = "Lint repository shell scripts"
+run = "shellcheck scripts/*.sh"
+
+[tasks.workflow-lint]
+description = "Lint GitHub Actions workflows"
+run = "test ! -d .github/workflows || zizmor --offline --no-ignores .github/workflows"
+
+[tasks.lint]
+description = "Run all non-test repository checks"
+depends = ["fmt-check", "shell-lint", "workflow-lint", "periphery"]
+
+[hooks]
+postinstall = "lefthook install"

@@ -8,6 +8,8 @@
 
 /* Begin PBXFileReference section */
 		41187B0F2FBEF48D00E650FC /* WoodSweep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WoodSweep.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D10000012F00000000E650FC /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
+		D10000022F00000000E650FC /* WoodSweepTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WoodSweepTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +18,22 @@
 			path = WoodSweep;
 			sourceTree = "<group>";
 		};
+		D10000032F00000000E650FC /* WoodSweepTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WoodSweepTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		41187B0C2FBEF48D00E650FC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D10000042F00000000E650FC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +47,8 @@
 			isa = PBXGroup;
 			children = (
 				41187B112FBEF48D00E650FC /* WoodSweep */,
+				D10000032F00000000E650FC /* WoodSweepTests */,
+				D10000052F00000000E650FC /* Config */,
 				41187B102FBEF48D00E650FC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,11 +57,30 @@
 			isa = PBXGroup;
 			children = (
 				41187B0F2FBEF48D00E650FC /* WoodSweep.app */,
+				D10000022F00000000E650FC /* WoodSweepTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
+		D10000052F00000000E650FC /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				D10000012F00000000E650FC /* Version.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
+
+/* Begin PBXContainerItemProxy section */
+		D10000062F00000000E650FC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 41187B072FBEF48D00E650FC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 41187B0E2FBEF48D00E650FC;
+			remoteInfo = WoodSweep;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXNativeTarget section */
 		41187B0E2FBEF48D00E650FC /* WoodSweep */ = {
@@ -70,6 +105,29 @@
 			productReference = 41187B0F2FBEF48D00E650FC /* WoodSweep.app */;
 			productType = "com.apple.product-type.application";
 		};
+		D10000072F00000000E650FC /* WoodSweepTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D10000082F00000000E650FC /* Build configuration list for PBXNativeTarget "WoodSweepTests" */;
+			buildPhases = (
+				D10000092F00000000E650FC /* Sources */,
+				D10000042F00000000E650FC /* Frameworks */,
+				D100000A2F00000000E650FC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D100000B2F00000000E650FC /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D10000032F00000000E650FC /* WoodSweepTests */,
+			);
+			name = WoodSweepTests;
+			packageProductDependencies = (
+			);
+			productName = WoodSweepTests;
+			productReference = D10000022F00000000E650FC /* WoodSweepTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +140,10 @@
 				TargetAttributes = {
 					41187B0E2FBEF48D00E650FC = {
 						CreatedOnToolsVersion = 26.5;
+					};
+					D10000072F00000000E650FC = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = 41187B0E2FBEF48D00E650FC;
 					};
 				};
 			};
@@ -100,12 +162,20 @@
 			projectRoot = "";
 			targets = (
 				41187B0E2FBEF48D00E650FC /* WoodSweep */,
+				D10000072F00000000E650FC /* WoodSweepTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		41187B0D2FBEF48D00E650FC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D100000A2F00000000E650FC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +192,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D10000092F00000000E650FC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D100000B2F00000000E650FC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 41187B0E2FBEF48D00E650FC /* WoodSweep */;
+			targetProxy = D10000062F00000000E650FC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		41187B182FBEF48F00E650FC /* Debug */ = {
@@ -180,7 +265,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MACOSX_DEPLOYMENT_TARGET = 26.6;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -240,7 +325,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MACOSX_DEPLOYMENT_TARGET = 26.6;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -251,17 +336,18 @@
 		};
 		41187B1B2FBEF48F00E650FC /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D10000012F00000000E650FC /* Version.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = SMLKBTR495;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -270,7 +356,6 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.6;
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.WoodSweep;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -285,17 +370,18 @@
 		};
 		41187B1C2FBEF48F00E650FC /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D10000012F00000000E650FC /* Version.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = SMLKBTR495;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -304,7 +390,6 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.6;
-				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.WoodSweep;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -314,6 +399,38 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		D100000C2F00000000E650FC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = SMLKBTR495;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.6;
+				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.WoodSweepTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WoodSweep.app/Contents/MacOS/WoodSweep";
+			};
+			name = Debug;
+		};
+		D100000D2F00000000E650FC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = SMLKBTR495;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.6;
+				PRODUCT_BUNDLE_IDENTIFIER = au.edu.vic.woodleigh.WoodSweepTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WoodSweep.app/Contents/MacOS/WoodSweep";
 			};
 			name = Release;
 		};
@@ -334,6 +451,15 @@
 			buildConfigurations = (
 				41187B1B2FBEF48F00E650FC /* Debug */,
 				41187B1C2FBEF48F00E650FC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D10000082F00000000E650FC /* Build configuration list for PBXNativeTarget "WoodSweepTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D100000C2F00000000E650FC /* Debug */,
+				D100000D2F00000000E650FC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

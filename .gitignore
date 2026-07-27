@@ -4,6 +4,10 @@
 
 ## User settings
 xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
 
 ## Obj-C/Swift specific
 *.hmap
@@ -30,6 +34,19 @@ Package.resolved
 # .swiftpm
 
 .build/
+DerivedData/
+*.xcarchive
+*.pkg
+
+# Local mise overrides
+.mise.local.toml
+.mise.local.lock
+
+# Editor / IDE
+.vscode/
+
+# Linked worktrees
+.worktrees/
 
 # CocoaPods
 #
@@ -61,4 +78,15 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
