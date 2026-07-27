@@ -79,6 +79,41 @@ struct OfficeApplicationsTests {
         ])
     }
 
+    @Test("a rejected termination remains non-waiting and is retried")
+    func retriesRejectedTermination() {
+        let controller = FakeOfficeApplicationController(
+            running: ["com.microsoft.Word"],
+            acceptsTermination: false
+        )
+        let applications = OfficeApplications(controller: controller)
+
+        applications.requestTerminationOfRunningApplications()
+
+        #expect(controller.requested == ["com.microsoft.Word"])
+        #expect(applications.runningStatuses() == [
+            OfficeApplicationStatus(
+                application: .word,
+                isRunning: true,
+                isWaitingForTermination: false
+            ),
+        ])
+
+        controller.setTerminationAccepted(true)
+        applications.requestTerminationOfRunningApplications()
+
+        #expect(controller.requested == [
+            "com.microsoft.Word",
+            "com.microsoft.Word",
+        ])
+        #expect(applications.runningStatuses() == [
+            OfficeApplicationStatus(
+                application: .word,
+                isRunning: true,
+                isWaitingForTermination: true
+            ),
+        ])
+    }
+
     @Test("waiting emits only changed statuses until every app closes")
     func waitsForAllApplicationsToClose() async {
         let controller = FakeOfficeApplicationController(running: [
@@ -87,26 +122,20 @@ struct OfficeApplicationsTests {
         ])
         let applications = OfficeApplications(controller: controller)
         applications.requestTerminationOfRunningApplications()
-        var changes: [[OfficeApplicationStatus]] = []
+        let recorder = OfficeStatusRecorder()
 
         let waitTask = Task {
             await applications.waitForAllApplicationsToClose {
-                changes.append($0)
+                recorder.record($0)
             }
         }
-        await Task.yield()
+        await recorder.waitForEmission(count: 1)
         controller.stop(.word)
-        for _ in 0 ..< 200 {
-            if changes.count >= 2 {
-                break
-            }
-            try? await Task.sleep(for: .milliseconds(10))
-        }
-        #expect(changes.count == 2)
+        await recorder.waitForEmission(count: 2)
         controller.stop(.excel)
         await waitTask.value
 
-        #expect(changes == [
+        #expect(recorder.changes == [
             [
                 OfficeApplicationStatus(
                     application: .word,
@@ -140,7 +169,6 @@ struct OfficeApplicationsTests {
         let waitTask = Task {
             await applications.waitForAllApplicationsToClose { _ in }
         }
-        await Task.yield()
         waitTask.cancel()
 
         await waitTask.value
@@ -153,10 +181,15 @@ private final class FakeOfficeApplicationController:
     OfficeApplicationControlling
 {
     private var running: Set<String>
+    private var acceptsTermination: Bool
     private(set) var requested: [String] = []
 
-    init(running: Set<String>) {
+    init(
+        running: Set<String>,
+        acceptsTermination: Bool = true
+    ) {
         self.running = running
+        self.acceptsTermination = acceptsTermination
     }
 
     func isRunning(_ application: OfficeApplication) -> Bool {
@@ -165,7 +198,11 @@ private final class FakeOfficeApplicationController:
 
     func requestTermination(_ application: OfficeApplication) -> Bool {
         requested.append(application.bundleIdentifier)
-        return true
+        return acceptsTermination
+    }
+
+    func setTerminationAccepted(_ accepted: Bool) {
+        acceptsTermination = accepted
     }
 
     func start(_ application: OfficeApplication) {
@@ -174,5 +211,32 @@ private final class FakeOfficeApplicationController:
 
     func stop(_ application: OfficeApplication) {
         running.remove(application.bundleIdentifier)
+    }
+}
+
+@MainActor
+private final class OfficeStatusRecorder {
+    private(set) var changes: [[OfficeApplicationStatus]] = []
+    private var awaitedCount = 0
+    private var continuation: CheckedContinuation<Void, Never>?
+
+    func record(_ statuses: [OfficeApplicationStatus]) {
+        changes.append(statuses)
+        guard changes.count >= awaitedCount, let continuation else {
+            return
+        }
+        self.continuation = nil
+        continuation.resume()
+    }
+
+    func waitForEmission(count: Int) async {
+        guard changes.count < count else {
+            return
+        }
+        precondition(continuation == nil)
+        awaitedCount = count
+        await withCheckedContinuation {
+            continuation = $0
+        }
     }
 }
