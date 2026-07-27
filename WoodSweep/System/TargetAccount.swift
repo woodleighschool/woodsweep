@@ -3,13 +3,11 @@ import Foundation
 import SystemConfiguration
 
 nonisolated struct TargetAccount: Equatable, Sendable {
-    // periphery:ignore
     let username: String
     let homeURL: URL
 }
 
 nonisolated protocol TargetAccountResolving: Sendable {
-    // periphery:ignore
     func resolve(username: String) throws -> TargetAccount
 }
 

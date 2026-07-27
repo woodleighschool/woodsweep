@@ -2,8 +2,7 @@ import Darwin
 import Foundation
 import OSLog
 
-protocol OfficeResetting: Sendable {
-    // periphery:ignore
+nonisolated protocol OfficeResetting: Sendable {
     func reset(
         _ application: OfficeApplication,
         in scope: HomeScope

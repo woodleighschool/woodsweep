@@ -1,6 +1,11 @@
 import Foundation
 
-enum OfficeApplication: String, CaseIterable, Identifiable, Sendable {
+nonisolated enum OfficeApplication:
+    String,
+    CaseIterable,
+    Identifiable,
+    Sendable
+{
     case word
     case excel
     case powerPoint
@@ -36,7 +41,11 @@ enum OfficeApplication: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-struct OfficeApplicationStatus: Identifiable, Equatable, Sendable {
+nonisolated struct OfficeApplicationStatus:
+    Identifiable,
+    Equatable,
+    Sendable
+{
     let application: OfficeApplication
     // periphery:ignore
     let isRunning: Bool
@@ -56,11 +65,8 @@ protocol OfficeApplicationControlling {
 
 @MainActor
 protocol OfficeApplicationManaging {
-    // periphery:ignore
     func runningStatuses() -> [OfficeApplicationStatus]
-    // periphery:ignore
     func requestTerminationOfRunningApplications()
-    // periphery:ignore
     func waitForAllApplicationsToClose(
         onChange: @escaping ([OfficeApplicationStatus]) -> Void
     ) async

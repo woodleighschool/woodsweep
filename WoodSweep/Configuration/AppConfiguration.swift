@@ -51,7 +51,6 @@ nonisolated protocol DefaultsStoring: Sendable {
 }
 
 nonisolated protocol ConfigurationLoading: Sendable {
-    // periphery:ignore
     func load() throws -> AppConfiguration
 }
 

@@ -6,8 +6,7 @@ nonisolated enum HomeResetOperation: Equatable, Sendable {
     case removing(String)
 }
 
-protocol HomeReconciling: Sendable {
-    // periphery:ignore
+nonisolated protocol HomeReconciling: Sendable {
     func reconcile(
         _ scope: HomeScope,
         progress: @Sendable (HomeResetOperation) async -> Void

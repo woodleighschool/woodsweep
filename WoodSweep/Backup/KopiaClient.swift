@@ -45,11 +45,8 @@ extension KopiaContext {
 }
 
 nonisolated protocol KopiaServicing: Sendable {
-    // periphery:ignore
     func prepare(_ context: KopiaContext) async throws
-    // periphery:ignore
     func validate(_ context: KopiaContext) async throws
-    // periphery:ignore
     func snapshot(homeURL: URL, context: KopiaContext) async throws
 }
 

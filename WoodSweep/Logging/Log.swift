@@ -19,4 +19,8 @@ nonisolated enum Log {
         subsystem: subsystem,
         category: "home"
     )
+    static let reset = Logger(
+        subsystem: subsystem,
+        category: "reset"
+    )
 }
