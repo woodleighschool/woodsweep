@@ -1,0 +1,141 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release-created: ${{ steps.release.outputs.release_created }}
+      tag-name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Generate token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.BOT_CLIENT_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: write
+
+      - name: Release Please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  build:
+    name: Build macOS release
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release-created == 'true' }}
+    runs-on: macos-26
+    permissions:
+      contents: write
+    env:
+      APP_NAME: WoodSweep
+      ARCHIVE_PATH: ${{ runner.temp }}/WoodSweep.xcarchive
+      DIST_PATH: ${{ github.workspace }}/dist
+      DMG_STAGE: ${{ runner.temp }}/dmg-stage
+      EXPORT_PATH: ${{ runner.temp }}/export
+      NOTARY_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+      PROJECT: WoodSweep.xcodeproj
+      SCHEME: WoodSweep
+    steps:
+      - name: Checkout release
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ needs.release-please.outputs.tag-name }}
+
+      - name: Import Developer ID certificate
+        uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
+        with:
+          p12-file-base64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          p12-password: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+
+      - name: Archive
+        run: |
+          xcodebuild \
+            -project "${PROJECT}" \
+            -scheme "${SCHEME}" \
+            -configuration Release \
+            -destination "generic/platform=macOS" \
+            -archivePath "${ARCHIVE_PATH}" \
+            clean archive
+
+      - name: Export Developer ID app
+        run: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath "${ARCHIVE_PATH}" \
+            -exportPath "${EXPORT_PATH}" \
+            -exportOptionsPlist Config/ExportOptions.plist
+
+      - name: Notarize app
+        env:
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+          NOTARY_KEY_BASE64: ${{ secrets.NOTARY_KEY_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+        run: |
+          APP_PATH="${EXPORT_PATH}/${APP_NAME}.app"
+          ZIP_PATH="${RUNNER_TEMP}/${APP_NAME}.zip"
+          trap 'rm -f "${ZIP_PATH}" "${NOTARY_KEY_PATH}"' EXIT
+
+          printf '%s' "${NOTARY_KEY_BASE64}" | base64 -D > "${NOTARY_KEY_PATH}"
+          chmod 600 "${NOTARY_KEY_PATH}"
+          ditto -c -k --keepParent "${APP_PATH}" "${ZIP_PATH}"
+
+          xcrun notarytool submit "${ZIP_PATH}" \
+            --key "${NOTARY_KEY_PATH}" \
+            --key-id "${NOTARY_KEY_ID}" \
+            --issuer "${NOTARY_ISSUER_ID}" \
+            --wait
+
+          xcrun stapler staple "${APP_PATH}"
+          xcrun stapler validate "${APP_PATH}"
+
+      - name: Create unsigned DMG
+        env:
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: |
+          mkdir -p "${DMG_STAGE}" "${DIST_PATH}"
+          ditto "${EXPORT_PATH}/${APP_NAME}.app" "${DMG_STAGE}/${APP_NAME}.app"
+          hdiutil create \
+            -volname "${APP_NAME}" \
+            -srcfolder "${DMG_STAGE}" \
+            -format UDZO \
+            -ov \
+            "${DIST_PATH}/${APP_NAME}-${VERSION}.dmg"
+
+      - name: Upload DMG
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag-name }}
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: |
+          gh release upload \
+            "${RELEASE_TAG}" \
+            "${DIST_PATH}/${APP_NAME}-${VERSION}.dmg" \
+            --clobber

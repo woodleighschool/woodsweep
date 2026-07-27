@@ -1,0 +1,20 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["local>woodleighschool/renovate-config"],
+  customManagers: [
+    {
+      customType: "regex",
+      managerFilePatterns: ["/^scripts\\/fetch-kopia\\.sh$/"],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nreadonly KOPIA_VERSION="(?<currentValue>[^"]+)"',
+      ],
+      extractVersionTemplate: "^v(?<version>.*)$",
+    },
+  ],
+  packageRules: [
+    {
+      matchManagers: ["mise"],
+      minimumReleaseAge: "12 hours",
+    },
+  ],
+}

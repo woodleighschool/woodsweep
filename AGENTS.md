@@ -8,7 +8,7 @@ Repository rules for agents working on WoodSweep.
 - The application is unsandboxed and hardened. Do not add a helper, XPC service, daemon, agent, startup item, authentication prompt, or elevation path.
 - A successful Kopia snapshot is the hard gate before any destructive cleanup.
 - Reset only the approved Word, Excel, PowerPoint, and target-home paths. Do not touch Office licensing, identities, credentials, certificates, Keychain data, managed preferences, system paths, repair state, or other Microsoft applications.
-- Follow `docs/superpowers/specs/2026-07-27-woodsweep-reboot-design.md` and the current implementation plan. Keep new shapes direct and specific.
+- Keep new shapes direct and specific.
 
 ## Repository Map
 
@@ -20,7 +20,7 @@ Repository rules for agents working on WoodSweep.
 - Ordered reset state machine: `WoodSweep/Reset/`
 - SwiftUI presentation: `WoodSweep/UI/`
 - Focused Swift Testing suites: `WoodSweepTests/`
-- Build, packaging, and verification scripts: `scripts/`
+- Kopia vendoring build phase: `scripts/fetch-kopia.sh`
 - Version and export settings: `Config/`
 
 Test-only fakes and fixtures stay private in the test file that uses them. Do not create a generic mock-support module.

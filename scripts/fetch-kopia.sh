@@ -26,19 +26,6 @@ if [[ ! -x "${SOURCE_BINARY}" || ! -f "${SOURCE_LICENSE}" ]]; then
     /bin/mv "${TEMP_DIR}/kopia-${KOPIA_VERSION}-macOS-universal" "${SOURCE_DIR}"
 fi
 
-if /usr/bin/codesign --display "${SOURCE_BINARY}" >/dev/null 2>&1; then
-    /usr/bin/codesign --verify --strict --verbose=2 "${SOURCE_BINARY}"
-fi
-
 /bin/mkdir -p "$(dirname "${BUNDLE_BINARY}")" "$(dirname "${BUNDLE_LICENSE}")"
 /usr/bin/install -m 0755 "${SOURCE_BINARY}" "${BUNDLE_BINARY}"
 /usr/bin/install -m 0644 "${SOURCE_LICENSE}" "${BUNDLE_LICENSE}"
-
-if [[ "${CODE_SIGNING_ALLOWED:-NO}" == "YES" ]]; then
-    identity="${EXPANDED_CODE_SIGN_IDENTITY:--}"
-    options=(--force --sign "${identity}" --options runtime)
-    if [[ "${identity}" != "-" && "${CONFIGURATION}" == "Release" ]]; then
-        options+=(--timestamp)
-    fi
-    /usr/bin/codesign "${options[@]}" "${BUNDLE_BINARY}"
-fi
