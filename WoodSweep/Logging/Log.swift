@@ -15,4 +15,8 @@ nonisolated enum Log {
         subsystem: subsystem,
         category: "office"
     )
+    static let home = Logger(
+        subsystem: subsystem,
+        category: "home"
+    )
 }
