@@ -39,7 +39,7 @@ nonisolated struct ConfigurationCommand: Sendable {
             try apply(update)
             let configuration = try load()
             let account = try resolveAccount(configuration.targetUsername)
-            context = KopiaContext(
+            context = try KopiaContext(
                 configuration: configuration,
                 targetAccount: account
             )

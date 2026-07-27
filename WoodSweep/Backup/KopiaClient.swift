@@ -4,30 +4,42 @@ import OSLog
 nonisolated struct KopiaContext: Equatable, Sendable {
     let settings: RepositorySettings
     let credentials: RepositoryCredentials
-    let configFile: URL
-    let cacheDirectory: URL
+    let homeURL: URL
+
+    var configFile: URL {
+        homeURL.appending(
+            path: "Library/Application Support/WoodSweep/kopia/repository.config"
+        )
+    }
+
+    var cacheDirectory: URL {
+        homeURL.appending(
+            path: "Library/Caches/WoodSweep/kopia",
+            directoryHint: .isDirectory
+        )
+    }
+
+    init(
+        settings: RepositorySettings,
+        credentials: RepositoryCredentials,
+        homeURL: URL
+    ) throws {
+        let scope = try HomeScope(homeURL: homeURL)
+        self.settings = settings
+        self.credentials = credentials
+        self.homeURL = scope.canonicalHomeURL
+    }
 }
 
 extension KopiaContext {
     nonisolated init(
         configuration: AppConfiguration,
         targetAccount: TargetAccount
-    ) {
-        let applicationSupport = targetAccount.homeURL.appending(
-            path: "Library/Application Support/WoodSweep/kopia",
-            directoryHint: .isDirectory
-        )
-        let cacheDirectory = targetAccount.homeURL.appending(
-            path: "Library/Caches/WoodSweep/kopia",
-            directoryHint: .isDirectory
-        )
-        self.init(
+    ) throws {
+        try self.init(
             settings: configuration.repository,
             credentials: configuration.credentials,
-            configFile: applicationSupport.appending(
-                path: "repository.config"
-            ),
-            cacheDirectory: cacheDirectory
+            homeURL: targetAccount.homeURL
         )
     }
 }
@@ -78,27 +90,25 @@ actor KopiaClient: KopiaServicing {
         defer { releaseOperation() }
         try Task.checkCancellation()
 
-        let fileManager = FileManager.default
-        try fileManager.createDirectory(
+        let scope = try HomeScope(homeURL: context.homeURL)
+        try scope.ensureDirectoryHierarchy(
             at: context.configFile.deletingLastPathComponent(),
-            withIntermediateDirectories: true
+            permissions: 0o700
         )
-        try fileManager.createDirectory(
+        try scope.ensureDirectoryHierarchy(
             at: context.cacheDirectory,
-            withIntermediateDirectories: true
+            permissions: 0o700
         )
 
-        var connected = false
-        if fileManager.fileExists(atPath: context.configFile.path) {
-            connected = repositoryMatches(context)
-            if connected == false {
-                try fileManager.removeItem(at: context.configFile)
-            }
-        }
-
+        let configData = try scope.dataIfRegularFile(at: context.configFile)
+        let connected = repositoryMatches(configData, context: context)
         if connected == false {
+            try scope.unlinkRegularFileOrSymbolicLink(
+                at: context.configFile
+            )
             try await connect(context)
         }
+
         try await validateUnlocked(context)
     }
 
@@ -204,9 +214,12 @@ actor KopiaClient: KopiaServicing {
         }
     }
 
-    private func repositoryMatches(_ context: KopiaContext) -> Bool {
+    private func repositoryMatches(
+        _ data: Data?,
+        context: KopiaContext
+    ) -> Bool {
         guard
-            let data = try? Data(contentsOf: context.configFile),
+            let data,
             let repository = try? JSONDecoder().decode(
                 KopiaRepositoryConfig.self,
                 from: data
@@ -238,11 +251,10 @@ actor KopiaClient: KopiaServicing {
     }
 
     private func normalized(_ value: String?) -> String? {
-        guard let value else {
+        guard let value, value.isEmpty == false else {
             return nil
         }
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
+        return value
     }
 
     private func acquireOperation() async {

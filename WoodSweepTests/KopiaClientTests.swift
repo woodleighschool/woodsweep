@@ -105,6 +105,129 @@ struct KopiaClientTests {
         )
     }
 
+    @Test("preparation rejects a symlinked Kopia ancestor")
+    func rejectsSymlinkedKopiaAncestor() async throws {
+        let fixture = try KopiaFixture()
+        let library = fixture.homeDirectory.appending(
+            path: "Library",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: library,
+            withIntermediateDirectories: false
+        )
+        let applicationSupport = library.appending(
+            path: "Application Support",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createSymbolicLink(
+            at: applicationSupport,
+            withDestinationURL: fixture.outsideDirectory
+        )
+        let outsideFile = fixture.outsideDirectory.appending(path: "keep")
+        try Data("keep".utf8).write(to: outsideFile)
+        let runner = RecordingProcessRunner(results: [.success, .status])
+        let client = KopiaClient(
+            processRunner: runner,
+            executableProvider: { fixture.executable }
+        )
+
+        await #expect(throws: HomeScope.Error.symlinkTraversal) {
+            try await client.prepare(fixture.context)
+        }
+
+        #expect(await runner.invocations.isEmpty)
+        #expect(FileManager.default.fileExists(atPath: outsideFile.path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: fixture.outsideDirectory
+                    .appending(path: "WoodSweep").path
+            ) == false
+        )
+        #expect(
+            try FileManager.default.destinationOfSymbolicLink(
+                atPath: applicationSupport.path
+            ) == fixture.outsideDirectory.path
+        )
+    }
+
+    @Test("a symlink config leaf is unlinked without reading its target")
+    func replacesSymlinkedRepositoryConfig() async throws {
+        let fixture = try KopiaFixture()
+        try FileManager.default.createDirectory(
+            at: fixture.configFile.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let outsideConfig = fixture.outsideDirectory.appending(path: "keep")
+        try fixture.writeRepositoryConfig(at: outsideConfig)
+        try FileManager.default.createSymbolicLink(
+            at: fixture.configFile,
+            withDestinationURL: outsideConfig
+        )
+        let runner = RecordingProcessRunner(results: [.success, .status])
+        let client = KopiaClient(
+            processRunner: runner,
+            executableProvider: { fixture.executable }
+        )
+
+        try await client.prepare(fixture.context)
+
+        #expect(await runner.invocations.count == 2)
+        #expect(
+            FileManager.default.fileExists(atPath: fixture.configFile.path)
+                == false
+        )
+        #expect(FileManager.default.fileExists(atPath: outsideConfig.path))
+        #expect(try Data(contentsOf: outsideConfig).isEmpty == false)
+    }
+
+    @Test("a directory named repository config is never deleted")
+    func rejectsDirectoryRepositoryConfig() async throws {
+        let fixture = try KopiaFixture()
+        try FileManager.default.createDirectory(
+            at: fixture.configFile,
+            withIntermediateDirectories: true
+        )
+        let nestedFile = fixture.configFile.appending(path: "keep")
+        try Data("keep".utf8).write(to: nestedFile)
+        let runner = RecordingProcessRunner(results: [.success, .status])
+        let client = KopiaClient(
+            processRunner: runner,
+            executableProvider: { fixture.executable }
+        )
+
+        await #expect(throws: HomeScope.Error.unsafeNode) {
+            try await client.prepare(fixture.context)
+        }
+
+        #expect(await runner.invocations.isEmpty)
+        #expect(FileManager.default.fileExists(atPath: fixture.configFile.path))
+        #expect(FileManager.default.fileExists(atPath: nestedFile.path))
+    }
+
+    @Test("non-empty optional values retain their exact bytes")
+    func preservesOptionalSettingBytes() async throws {
+        let fixture = try KopiaFixture(
+            region: " ap-southeast-2 ",
+            prefix: " sac/ "
+        )
+        let runner = RecordingProcessRunner(results: [.success, .status])
+        let client = KopiaClient(
+            processRunner: runner,
+            executableProvider: { fixture.executable }
+        )
+
+        try await client.prepare(fixture.context)
+
+        let arguments = try #require(
+            await runner.invocations.first?.arguments
+        )
+        let regionIndex = try #require(arguments.firstIndex(of: "--region"))
+        let prefixIndex = try #require(arguments.firstIndex(of: "--prefix"))
+        #expect(arguments[regionIndex + 1] == " ap-southeast-2 ")
+        #expect(arguments[prefixIndex + 1] == " sac/ ")
+    }
+
     @Test("snapshot has the resolved home as its only source")
     func snapshotsOnlyResolvedHome() async throws {
         let fixture = try KopiaFixture()
@@ -226,6 +349,7 @@ private actor RecordingProcessRunner: ProcessRunning {
 private final class KopiaFixture: @unchecked Sendable {
     let root: URL
     let homeDirectory: URL
+    let outsideDirectory: URL
     let configFile: URL
     let cacheDirectory: URL
     let executable: URL
@@ -241,23 +365,27 @@ private final class KopiaFixture: @unchecked Sendable {
     }
 
     init(region: String? = "ap-southeast-2", prefix: String? = "sac/") throws {
-        root = FileManager.default.temporaryDirectory.appending(
+        let root = FileManager.default.temporaryDirectory.appending(
             path: UUID().uuidString,
             directoryHint: .isDirectory
         )
-        homeDirectory = root.appending(
+        let homeDirectory = root.appending(
             path: "home",
             directoryHint: .isDirectory
         )
-        configFile = homeDirectory.appending(
-            path: "Library/Application Support/WoodSweep/kopia/repository.config"
-        )
-        cacheDirectory = homeDirectory.appending(
-            path: "Library/Caches/WoodSweep/kopia",
+        let outsideDirectory = root.appending(
+            path: "outside",
             directoryHint: .isDirectory
         )
-        executable = root.appending(path: "kopia")
-        context = KopiaContext(
+        try FileManager.default.createDirectory(
+            at: homeDirectory,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: outsideDirectory,
+            withIntermediateDirectories: false
+        )
+        let context = try KopiaContext(
             settings: RepositorySettings(
                 endpoint: "s3.example.test",
                 bucket: "exam-backups",
@@ -269,13 +397,15 @@ private final class KopiaFixture: @unchecked Sendable {
                 secretAccessKey: "secret",
                 repositoryPassword: "password"
             ),
-            configFile: configFile,
-            cacheDirectory: cacheDirectory
+            homeURL: homeDirectory
         )
-        try FileManager.default.createDirectory(
-            at: homeDirectory,
-            withIntermediateDirectories: true
-        )
+        self.root = root
+        self.homeDirectory = context.homeURL
+        self.outsideDirectory = outsideDirectory
+        configFile = context.configFile
+        cacheDirectory = context.cacheDirectory
+        executable = root.appending(path: "kopia")
+        self.context = context
     }
 
     deinit {
@@ -285,10 +415,12 @@ private final class KopiaFixture: @unchecked Sendable {
     func writeRepositoryConfig(
         bucket: String = "exam-backups",
         region: String? = "ap-southeast-2",
-        prefix: String? = "sac/"
+        prefix: String? = "sac/",
+        at destination: URL? = nil
     ) throws {
+        let destination = destination ?? configFile
         try FileManager.default.createDirectory(
-            at: configFile.deletingLastPathComponent(),
+            at: destination.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
         let optionalValues = [
@@ -310,7 +442,7 @@ private final class KopiaFixture: @unchecked Sendable {
           }
         }
         """
-        try Data(json.utf8).write(to: configFile)
+        try Data(json.utf8).write(to: destination)
     }
 }
 

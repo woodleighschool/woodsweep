@@ -223,8 +223,8 @@ struct ConfigurationTests {
     }
 
     @Test("configure applies, reloads, resolves, and prepares")
-    func configuresRepository() async {
-        let state = ConfigurationCommandState()
+    func configuresRepository() async throws {
+        let state = try ConfigurationCommandState()
         let configuration = configuredConfiguration()
         let command = ConfigurationCommand(
             apply: { update in
@@ -240,7 +240,7 @@ struct ConfigurationTests {
                 #expect(username == "sac")
                 return TargetAccount(
                     username: username,
-                    homeURL: URL(filePath: "/Users/sac")
+                    homeURL: state.homeURL
                 )
             },
             prepareRepository: { context in
@@ -260,18 +260,27 @@ struct ConfigurationTests {
         #expect(status == 0)
         #expect(state.events == ["apply", "load", "resolve", "prepare"])
         #expect(state.update?.bucket == "new-bucket")
-        #expect(state.context?.configFile.path == """
-        /Users/sac/Library/Application Support/WoodSweep/kopia/repository.config
-        """)
-        #expect(state.context?.cacheDirectory.path == """
-        /Users/sac/Library/Caches/WoodSweep/kopia
-        """)
+        #expect(
+            state.context?.configFile
+                == state.homeURL.appending(
+                    path: """
+                    Library/Application Support/WoodSweep/kopia/repository.config
+                    """
+                )
+        )
+        #expect(
+            state.context?.cacheDirectory
+                == state.homeURL.appending(
+                    path: "Library/Caches/WoodSweep/kopia",
+                    directoryHint: .isDirectory
+                )
+        )
         #expect(state.errors.isEmpty)
     }
 
     @Test("configure returns exact failure classes")
-    func returnsConfigureFailureClasses() async {
-        let invalidState = ConfigurationCommandState()
+    func returnsConfigureFailureClasses() async throws {
+        let invalidState = try ConfigurationCommandState()
         let invalid = command(state: invalidState)
         #expect(
             await invalid.run(arguments: ["--backend", "filesystem"]) == 64
@@ -279,12 +288,12 @@ struct ConfigurationTests {
         #expect(invalidState.errors == ["Unknown option: --backend."])
         #expect(invalidState.errors[0].contains("filesystem") == false)
 
-        let validationState = ConfigurationCommandState()
+        let validationState = try ConfigurationCommandState()
         validationState.loadError = AppConfigurationStore.Error
             .missingValue("s3Bucket")
         #expect(await command(state: validationState).run(arguments: []) == 78)
 
-        let repositoryState = ConfigurationCommandState()
+        let repositoryState = try ConfigurationCommandState()
         repositoryState.prepareError = KopiaClient.Error.commandFailed(
             command: "repository status",
             status: 1,
@@ -340,7 +349,7 @@ struct ConfigurationTests {
             resolveAccount: { username in
                 TargetAccount(
                     username: username,
-                    homeURL: URL(filePath: "/Users/sac")
+                    homeURL: state.homeURL
                 )
             },
             prepareRepository: { _ in
@@ -354,12 +363,29 @@ struct ConfigurationTests {
 }
 
 private final class ConfigurationCommandState: @unchecked Sendable {
+    let homeURL: URL
     var events: [String] = []
     var update: ConfigurationUpdate?
     var context: KopiaContext?
     var errors: [String] = []
     var loadError: (any Error)?
     var prepareError: (any Error)?
+
+    init() throws {
+        let homeURL = FileManager.default.temporaryDirectory.appending(
+            path: "WoodSweepConfigurationTests-\(UUID().uuidString)",
+            directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: homeURL,
+            withIntermediateDirectories: false
+        )
+        self.homeURL = homeURL.resolvingSymlinksInPath().standardizedFileURL
+    }
+
+    deinit {
+        try? FileManager.default.removeItem(at: homeURL)
+    }
 }
 
 private final class MemoryDefaults: DefaultsStoring, @unchecked Sendable {

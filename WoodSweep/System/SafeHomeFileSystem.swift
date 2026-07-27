@@ -7,6 +7,7 @@ nonisolated struct HomeScope: Equatable, Sendable {
         case unavailable
         case notDirectory
         case symlinkTraversal
+        case unsafeNode
 
         var errorDescription: String? {
             switch self {
@@ -18,6 +19,8 @@ nonisolated struct HomeScope: Equatable, Sendable {
                 "The requested home path is not a directory."
             case .symlinkTraversal:
                 "The requested home path would traverse a symbolic link."
+            case .unsafeNode:
+                "The requested home path is not a safe regular file."
             }
         }
     }
@@ -41,7 +44,7 @@ nonisolated struct HomeScope: Equatable, Sendable {
             throw Error.symlinkTraversal
         case .directory:
             break
-        case .other:
+        case .regularFile, .other:
             throw Error.notDirectory
         case nil:
             throw Error.unavailable
@@ -75,7 +78,7 @@ nonisolated struct HomeScope: Equatable, Sendable {
             throw Error.symlinkTraversal
         case .directory:
             break
-        case .other:
+        case .regularFile, .other:
             throw Error.notDirectory
         case nil:
             return []
@@ -108,7 +111,7 @@ nonisolated struct HomeScope: Equatable, Sendable {
             guard Darwin.rmdir(item.path) == 0 else {
                 throw Error.unavailable
             }
-        case .symbolicLink, .other:
+        case .regularFile, .symbolicLink, .other:
             guard Darwin.unlink(item.path) == 0 else {
                 throw Error.unavailable
             }
@@ -127,7 +130,7 @@ nonisolated struct HomeScope: Equatable, Sendable {
         switch try Self.nodeKind(at: directory) {
         case .directory:
             break
-        case .symbolicLink, .other:
+        case .regularFile, .symbolicLink, .other:
             try removeItem(at: directory)
             try createDirectory(at: directory, permissions: permissions)
         case nil:
@@ -148,6 +151,96 @@ nonisolated struct HomeScope: Equatable, Sendable {
         for child in try children(of: directory) {
             try removeItem(at: child)
         }
+    }
+
+    func ensureDirectoryHierarchy(
+        at directory: URL,
+        permissions: Int
+    ) throws {
+        let directory = try contained(directory)
+        let relativePath = String(
+            directory.path.dropFirst(homeURL.path.count + 1)
+        )
+        let components = relativePath.split(
+            separator: "/",
+            omittingEmptySubsequences: true
+        )
+        var current = homeURL
+
+        for component in components {
+            current.append(path: String(component))
+            switch try Self.nodeKind(at: current) {
+            case .directory:
+                continue
+            case .symbolicLink:
+                throw Error.symlinkTraversal
+            case .regularFile, .other:
+                throw Error.notDirectory
+            case nil:
+                try createDirectory(
+                    at: current,
+                    permissions: permissions
+                )
+            }
+        }
+    }
+
+    func dataIfRegularFile(at file: URL) throws -> Data? {
+        let file = try contained(file)
+        try rejectSymlinkAncestors(of: file)
+
+        switch try Self.nodeKind(at: file) {
+        case .regularFile:
+            break
+        case .symbolicLink, nil:
+            return nil
+        case .directory, .other:
+            throw Error.unsafeNode
+        }
+
+        let descriptor = Darwin.open(
+            file.path,
+            O_RDONLY | O_NOFOLLOW | O_CLOEXEC
+        )
+        guard descriptor >= 0 else {
+            throw Error.unavailable
+        }
+        let handle = FileHandle(
+            fileDescriptor: descriptor,
+            closeOnDealloc: true
+        )
+        var info = stat()
+        guard Darwin.fstat(descriptor, &info) == 0,
+              info.st_mode & S_IFMT == S_IFREG
+        else {
+            throw Error.unsafeNode
+        }
+
+        do {
+            return try handle.readToEnd() ?? Data()
+        } catch {
+            throw Error.unavailable
+        }
+    }
+
+    func unlinkRegularFileOrSymbolicLink(at file: URL) throws {
+        let file = try contained(file)
+        try rejectSymlinkAncestors(of: file)
+
+        switch try Self.nodeKind(at: file) {
+        case .regularFile, .symbolicLink:
+            guard Darwin.unlink(file.path) == 0 else {
+                throw Error.unavailable
+            }
+        case nil:
+            return
+        case .directory, .other:
+            throw Error.unsafeNode
+        }
+    }
+
+    var canonicalHomeURL: URL {
+        homeURL
     }
 
     private func contained(_ candidate: URL) throws -> URL {
@@ -179,7 +272,7 @@ nonisolated struct HomeScope: Equatable, Sendable {
                 throw Error.symlinkTraversal
             case .directory:
                 continue
-            case .other:
+            case .regularFile, .other:
                 throw Error.notDirectory
             case nil:
                 return
@@ -204,6 +297,7 @@ nonisolated struct HomeScope: Equatable, Sendable {
 
     private enum NodeKind {
         case directory
+        case regularFile
         case symbolicLink
         case other
     }
@@ -220,6 +314,8 @@ nonisolated struct HomeScope: Equatable, Sendable {
         switch info.st_mode & S_IFMT {
         case S_IFDIR:
             return .directory
+        case S_IFREG:
+            return .regularFile
         case S_IFLNK:
             return .symbolicLink
         default:
