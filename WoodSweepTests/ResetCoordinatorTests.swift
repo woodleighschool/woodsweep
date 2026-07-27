@@ -74,6 +74,55 @@ struct ResetCoordinatorTests {
         #expect(fixture.coordinator.allowsTermination)
     }
 
+    @Test("concurrent startup launches one prerequisite pipeline")
+    func startupIsSingleFlight() async throws {
+        let prepareGate = AsyncGate()
+        let snapshotGate = AsyncGate()
+        let fixture = try CoordinatorFixture(
+            prepareGate: prepareGate,
+            snapshotGate: snapshotGate
+        )
+
+        let firstStart = Task {
+            await fixture.coordinator.start()
+        }
+        await prepareGate.waitUntilEntered()
+        #expect(fixture.coordinator.state == .checking)
+        #expect(fixture.coordinator.allowsTermination)
+
+        let concurrentStart = Task {
+            await fixture.coordinator.start()
+        }
+        await concurrentStart.value
+
+        #expect(await fixture.events.values == [
+            .loadConfiguration,
+            .resolveAccount,
+            .prepareRepository,
+        ])
+        #expect(fixture.coordinator.state == .checking)
+
+        await prepareGate.open()
+        await firstStart.value
+
+        #expect(fixture.coordinator.state == .confirmation(username: "sac"))
+        #expect(await fixture.events.values == [
+            .loadConfiguration,
+            .resolveAccount,
+            .prepareRepository,
+        ])
+
+        let reset = Task {
+            await fixture.coordinator.confirmReset()
+        }
+        await snapshotGate.waitUntilEntered()
+
+        #expect(fixture.coordinator.state == .backingUp)
+
+        await snapshotGate.open()
+        await reset.value
+    }
+
     @Test("one Quit Apps request waits for all scoped applications")
     func quitAppsWaitsForEveryApplication() async throws {
         let running = OfficeApplication.allCases.map {
@@ -351,6 +400,7 @@ private final class CoordinatorFixture {
         waitStatusChanges: [[OfficeApplicationStatus]] = [],
         officeFailure: OfficeApplication? = nil,
         homeFailure: TestError? = nil,
+        prepareGate: AsyncGate? = nil,
         snapshotGate: AsyncGate? = nil,
         resetGate: AsyncGate? = nil
     ) throws {
@@ -398,6 +448,7 @@ private final class CoordinatorFixture {
             kopia: FakeKopiaService(
                 events: events,
                 snapshotResults: snapshotResults,
+                prepareGate: prepareGate,
                 snapshotGate: snapshotGate
             ),
             officeApplications: officeApplications,
@@ -473,20 +524,28 @@ private struct FakeTargetAccountResolver: TargetAccountResolving {
 private actor FakeKopiaService: KopiaServicing {
     let events: EventRecorder
     var snapshotResults: [Result<Void, TestError>]
+    let prepareGate: AsyncGate?
     let snapshotGate: AsyncGate?
+    var prepareCount = 0
 
     init(
         events: EventRecorder,
         snapshotResults: [Result<Void, TestError>],
+        prepareGate: AsyncGate?,
         snapshotGate: AsyncGate?
     ) {
         self.events = events
         self.snapshotResults = snapshotResults
+        self.prepareGate = prepareGate
         self.snapshotGate = snapshotGate
     }
 
     func prepare(_: KopiaContext) async throws {
         events.record(.prepareRepository)
+        prepareCount += 1
+        if prepareCount == 1, let prepareGate {
+            await prepareGate.enter()
+        }
     }
 
     func validate(_: KopiaContext) async throws {

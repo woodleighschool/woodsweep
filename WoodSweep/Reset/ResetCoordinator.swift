@@ -35,6 +35,7 @@ final class ResetCoordinator {
     private var snapshotSucceeded = false
     private var isWaitingForApplications = false
     private var currentHomeOperation: ResetOperation?
+    private var isStarting = false
 
     init(
         configurationLoader: any ConfigurationLoading,
@@ -55,9 +56,11 @@ final class ResetCoordinator {
     }
 
     func start() async {
-        guard state == .checking else {
+        guard state == .checking, isStarting == false else {
             return
         }
+        isStarting = true
+        defer { isStarting = false }
 
         Log.reset.info("Checking reset prerequisites")
         confirmed = false
