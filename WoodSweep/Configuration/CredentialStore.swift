@@ -90,6 +90,7 @@ nonisolated struct KeychainCredentialStore: CredentialStoring {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.service,
             kSecAttrAccount as String: key.rawValue,
+            kSecUseDataProtectionKeychain as String: true,
             kSecAttrSynchronizable as String: false,
         ]
     }
