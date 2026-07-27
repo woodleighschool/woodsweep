@@ -44,7 +44,6 @@ xcodebuild test \
   -project WoodSweep.xcodeproj \
   -scheme WoodSweep \
   -destination 'platform=macOS' \
-  -derivedDataPath "$PWD/.build/DerivedData" \
   CODE_SIGNING_ALLOWED=NO
 """
 
@@ -54,7 +53,7 @@ run = "shellcheck scripts/*.sh"
 
 [tasks.workflow-lint]
 description = "Lint GitHub Actions workflows"
-run = "test ! -d .github/workflows || zizmor --offline --no-ignores .github/workflows"
+run = "zizmor --offline --no-ignores .github/workflows"
 
 [tasks.lint]
 description = "Run all non-test repository checks"
