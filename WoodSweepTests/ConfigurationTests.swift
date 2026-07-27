@@ -222,6 +222,77 @@ struct ConfigurationTests {
         }
     }
 
+    @Test("configure applies, reloads, resolves, and prepares")
+    func configuresRepository() async {
+        let state = ConfigurationCommandState()
+        let configuration = configuredConfiguration()
+        let command = ConfigurationCommand(
+            apply: { update in
+                state.events.append("apply")
+                state.update = update
+            },
+            load: {
+                state.events.append("load")
+                return configuration
+            },
+            resolveAccount: { username in
+                state.events.append("resolve")
+                #expect(username == "sac")
+                return TargetAccount(
+                    username: username,
+                    homeURL: URL(filePath: "/Users/sac")
+                )
+            },
+            prepareRepository: { context in
+                state.events.append("prepare")
+                state.context = context
+            },
+            writeError: { message in
+                state.errors.append(message)
+            }
+        )
+
+        let status = await command.run(arguments: [
+            "--bucket", "new-bucket",
+            "--repository-password", "new-password",
+        ])
+
+        #expect(status == 0)
+        #expect(state.events == ["apply", "load", "resolve", "prepare"])
+        #expect(state.update?.bucket == "new-bucket")
+        #expect(state.context?.configFile.path == """
+        /Users/sac/Library/Application Support/WoodSweep/kopia/repository.config
+        """)
+        #expect(state.context?.cacheDirectory.path == """
+        /Users/sac/Library/Caches/WoodSweep/kopia
+        """)
+        #expect(state.errors.isEmpty)
+    }
+
+    @Test("configure returns exact failure classes")
+    func returnsConfigureFailureClasses() async {
+        let invalidState = ConfigurationCommandState()
+        let invalid = command(state: invalidState)
+        #expect(
+            await invalid.run(arguments: ["--backend", "filesystem"]) == 64
+        )
+        #expect(invalidState.errors == ["Unknown option: --backend."])
+        #expect(invalidState.errors[0].contains("filesystem") == false)
+
+        let validationState = ConfigurationCommandState()
+        validationState.loadError = AppConfigurationStore.Error
+            .missingValue("s3Bucket")
+        #expect(await command(state: validationState).run(arguments: []) == 78)
+
+        let repositoryState = ConfigurationCommandState()
+        repositoryState.prepareError = KopiaClient.Error.commandFailed(
+            command: "repository status",
+            status: 1,
+            message: "repository unavailable"
+        )
+        #expect(await command(state: repositoryState).run(arguments: []) == 69)
+    }
+
     private func configuredDefaults() -> MemoryDefaults {
         MemoryDefaults([
             DefaultsKey.targetUsername.rawValue: "sac",
@@ -237,6 +308,58 @@ struct ConfigurationTests {
             .repositoryPassword: "password",
         ])
     }
+
+    private func configuredConfiguration() -> AppConfiguration {
+        AppConfiguration(
+            targetUsername: "sac",
+            repository: RepositorySettings(
+                endpoint: "s3.example.test",
+                bucket: "exam-backups",
+                region: nil,
+                prefix: nil,
+                accessKeyID: "access"
+            ),
+            credentials: RepositoryCredentials(
+                secretAccessKey: "secret",
+                repositoryPassword: "password"
+            )
+        )
+    }
+
+    private func command(
+        state: ConfigurationCommandState
+    ) -> ConfigurationCommand {
+        ConfigurationCommand(
+            apply: { _ in },
+            load: {
+                if let error = state.loadError {
+                    throw error
+                }
+                return configuredConfiguration()
+            },
+            resolveAccount: { username in
+                TargetAccount(
+                    username: username,
+                    homeURL: URL(filePath: "/Users/sac")
+                )
+            },
+            prepareRepository: { _ in
+                if let error = state.prepareError {
+                    throw error
+                }
+            },
+            writeError: { state.errors.append($0) }
+        )
+    }
+}
+
+private final class ConfigurationCommandState: @unchecked Sendable {
+    var events: [String] = []
+    var update: ConfigurationUpdate?
+    var context: KopiaContext?
+    var errors: [String] = []
+    var loadError: (any Error)?
+    var prepareError: (any Error)?
 }
 
 private final class MemoryDefaults: DefaultsStoring, @unchecked Sendable {

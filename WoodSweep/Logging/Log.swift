@@ -7,4 +7,8 @@ nonisolated enum Log {
         subsystem: subsystem,
         category: "configuration"
     )
+    static let kopia = Logger(
+        subsystem: subsystem,
+        category: "kopia"
+    )
 }

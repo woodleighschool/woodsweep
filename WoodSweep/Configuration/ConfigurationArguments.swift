@@ -1,11 +1,24 @@
 import Foundation
 
 nonisolated enum ConfigurationArguments {
-    enum Error: Swift.Error, Equatable {
+    enum Error: Swift.Error, Equatable, LocalizedError {
         case unknownOption(String)
         case missingValue(String)
         case emptyValue(String)
         case duplicateOption(String)
+
+        var errorDescription: String? {
+            switch self {
+            case let .unknownOption(option):
+                "Unknown option: \(option)."
+            case let .missingValue(option):
+                "Missing value for \(option)."
+            case let .emptyValue(option):
+                "Empty value for \(option)."
+            case let .duplicateOption(option):
+                "Duplicate option: \(option)."
+            }
+        }
     }
 
     static func parse(_ arguments: [String]) throws -> ConfigurationUpdate {

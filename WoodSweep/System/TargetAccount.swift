@@ -2,18 +2,17 @@ import Darwin
 import Foundation
 import SystemConfiguration
 
-// periphery:ignore
 nonisolated struct TargetAccount: Equatable, Sendable {
+    // periphery:ignore
     let username: String
     let homeURL: URL
 }
 
-// periphery:ignore
 nonisolated protocol TargetAccountResolving: Sendable {
+    // periphery:ignore
     func resolve(username: String) throws -> TargetAccount
 }
 
-// periphery:ignore
 nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
     enum Error: Swift.Error, Equatable, LocalizedError {
         case accountUnavailable
