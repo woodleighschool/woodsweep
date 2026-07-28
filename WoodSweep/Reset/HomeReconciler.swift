@@ -43,7 +43,14 @@ nonisolated struct HomeReconciler: HomeReconciling {
                     at: directoryURL,
                     permissions: directory.permissions
                 )
-                try scope.emptyDirectory(at: directoryURL)
+                if directory.name == "Public" {
+                    try reconcilePublic(
+                        scope,
+                        publicURL: directoryURL
+                    )
+                } else {
+                    try scope.emptyDirectory(at: directoryURL)
+                }
             } catch {
                 logFailure(operation, error: error)
                 throw error
@@ -79,6 +86,21 @@ nonisolated struct HomeReconciler: HomeReconciling {
         }
 
         Log.home.info("Completed home reconciliation")
+    }
+
+    private func reconcilePublic(
+        _ scope: HomeScope,
+        publicURL: URL
+    ) throws {
+        let dropBoxURL = try scope.url(for: "Public/Drop Box")
+        try scope.ensureDirectory(at: dropBoxURL, permissions: 0o733)
+        try scope.emptyDirectory(at: dropBoxURL)
+
+        for child in try scope.children(of: publicURL)
+            where child.lastPathComponent != "Drop Box"
+        {
+            try scope.removeItem(at: child)
+        }
     }
 
     private func logFailure(

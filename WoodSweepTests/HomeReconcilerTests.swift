@@ -15,6 +15,7 @@ struct HomeReconcilerTests {
         }
 
         try expectStandardDirectories(in: fixture.home)
+        try expectDropBox(in: fixture.home)
         #expect(
             try topLevelNames(in: fixture.home) == Set([
                 ".CFUserTextEncoding",
@@ -81,6 +82,7 @@ struct HomeReconcilerTests {
         try await HomeReconciler().reconcile(fixture.scope) { _ in }
 
         try expectStandardDirectories(in: fixture.home)
+        try expectDropBox(in: fixture.home)
         #expect(
             try topLevelNames(in: fixture.home)
                 == Set(standardDirectoryPermissions.map(\.name))
@@ -122,14 +124,34 @@ private func expectStandardDirectories(in home: URL) throws {
 
         #expect(values.isDirectory == true)
         #expect(values.isSymbolicLink == false)
+        let expectedContents = directory.name == "Public" ? ["Drop Box"] : []
         #expect(
             try FileManager.default.contentsOfDirectory(atPath: url.path)
-                .isEmpty
+                == expectedContents
         )
         #expect(
             attributes[.posixPermissions] as? Int == directory.permissions
         )
     }
+}
+
+private func expectDropBox(in home: URL) throws {
+    let dropBox = home.appending(path: "Public/Drop Box")
+    let values = try dropBox.resourceValues(forKeys: [
+        .isDirectoryKey,
+        .isSymbolicLinkKey,
+    ])
+    let attributes = try FileManager.default.attributesOfItem(
+        atPath: dropBox.path
+    )
+
+    #expect(values.isDirectory == true)
+    #expect(values.isSymbolicLink == false)
+    #expect(
+        try FileManager.default.contentsOfDirectory(atPath: dropBox.path)
+            .isEmpty
+    )
+    #expect(attributes[.posixPermissions] as? Int == 0o733)
 }
 
 private func topLevelNames(in home: URL) throws -> Set<String> {
@@ -197,6 +219,16 @@ private final class HomeReconciliationFixture {
                 to: directoryURL.appending(path: file)
             )
         }
+
+        let dropBox = home.appending(path: "Public/Drop Box")
+        try FileManager.default.createDirectory(
+            at: dropBox,
+            withIntermediateDirectories: false,
+            attributes: [.posixPermissions: 0o777]
+        )
+        try Data("remove".utf8).write(
+            to: dropBox.appending(path: "deleted.txt")
+        )
 
         let library = home.appending(path: "Library")
         try FileManager.default.createDirectory(
