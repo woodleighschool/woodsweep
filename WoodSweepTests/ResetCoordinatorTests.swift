@@ -39,7 +39,7 @@ struct ResetCoordinatorTests {
         await fixture.coordinator.confirmReset()
         #expect(fixture.coordinator.state == .restartRequired)
 
-        fixture.coordinator.requestRestart()
+        try fixture.coordinator.requestRestart()
 
         #expect(await fixture.events.values == [
             .loadConfiguration,
@@ -312,10 +312,24 @@ struct ResetCoordinatorTests {
         let fixture = try CoordinatorFixture()
 
         await fixture.coordinator.start()
-        fixture.coordinator.requestRestart()
+        try fixture.coordinator.requestRestart()
 
         #expect(fixture.restartRequester.requestCount == 0)
         #expect(await fixture.events.values.contains(.restartRequired) == false)
+    }
+
+    @Test("restart request failures reach the presentation")
+    func restartFailureIsReported() async throws {
+        let fixture = try CoordinatorFixture(
+            restartFailure: .restart
+        )
+
+        await fixture.coordinator.start()
+        await fixture.coordinator.confirmReset()
+
+        #expect(throws: TestError.restart) {
+            try fixture.coordinator.requestRestart()
+        }
     }
 }
 
@@ -368,10 +382,11 @@ private func status(
     )
 }
 
-private enum TestError: Swift.Error, LocalizedError {
+private enum TestError: Swift.Error, Equatable, LocalizedError {
     case snapshot
     case office
     case home
+    case restart
 
     var errorDescription: String? {
         switch self {
@@ -381,6 +396,8 @@ private enum TestError: Swift.Error, LocalizedError {
             "Office reset failed."
         case .home:
             "Home reconciliation failed."
+        case .restart:
+            "Restart request failed."
         }
     }
 }
@@ -400,6 +417,7 @@ private final class CoordinatorFixture {
         waitStatusChanges: [[OfficeApplicationStatus]] = [],
         officeFailure: OfficeApplication? = nil,
         homeFailure: TestError? = nil,
+        restartFailure: TestError? = nil,
         prepareGate: AsyncGate? = nil,
         snapshotGate: AsyncGate? = nil,
         resetGate: AsyncGate? = nil
@@ -431,7 +449,10 @@ private final class CoordinatorFixture {
             statusResults: officeStatusResults,
             waitStatusChanges: waitStatusChanges
         )
-        restartRequester = FakeRestartRequester(events: events)
+        restartRequester = FakeRestartRequester(
+            events: events,
+            failure: restartFailure
+        )
 
         coordinator = ResetCoordinator(
             configurationLoader: FakeConfigurationLoader(
@@ -664,10 +685,12 @@ private final class FakeRestartRequester:
     @unchecked Sendable
 {
     let events: EventRecorder
+    let failure: TestError?
     private let count = Locked(0)
 
-    init(events: EventRecorder) {
+    init(events: EventRecorder, failure: TestError?) {
         self.events = events
+        self.failure = failure
     }
 
     var requestCount: Int {
@@ -677,6 +700,9 @@ private final class FakeRestartRequester:
     func requestRestart() throws {
         count.withValue { $0 += 1 }
         events.record(.restartRequired)
+        if let failure {
+            throw failure
+        }
     }
 }
 

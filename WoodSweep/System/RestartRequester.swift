@@ -6,57 +6,25 @@ nonisolated protocol RestartRequesting: Sendable {
 }
 
 nonisolated struct RestartRequester: RestartRequesting {
-    enum Error: Swift.Error, Equatable, LocalizedError {
-        case appleEventFailed(OSStatus)
-
-        var errorDescription: String? {
-            switch self {
-            case let .appleEventFailed(status):
-                "The restart dialog could not be requested (\(status))."
-            }
-        }
-    }
-
     func requestRestart() throws {
-        var processID: pid_t = 0
-        var target = AEAddressDesc()
-        let addressStatus = AECreateDesc(
-            DescType(typeKernelProcessID),
-            &processID,
-            MemoryLayout<pid_t>.size,
-            &target
+        let target = NSAppleEventDescriptor(
+            bundleIdentifier: "com.apple.loginwindow"
         )
-        guard addressStatus == noErr else {
-            throw Error.appleEventFailed(OSStatus(addressStatus))
-        }
-        defer {
-            AEDisposeDesc(&target)
-        }
+        let event = NSAppleEventDescriptor(
+            eventClass: AEEventClass(kCoreEventClass),
+            eventID: AEEventID(kAEShowRestartDialog),
+            targetDescriptor: target,
+            returnID: AEReturnID(kAutoGenerateReturnID),
+            transactionID: AETransactionID(kAnyTransactionID)
+        )
 
-        var event = AppleEvent()
-        let eventStatus = AECreateAppleEvent(
-            AEEventClass(kCoreEventClass),
-            AEEventID(kAEShowRestartDialog),
-            &target,
-            AEReturnID(kAutoGenerateReturnID),
-            AETransactionID(kAnyTransactionID),
-            &event
+        _ = try event.sendEvent(
+            options: [
+                .noReply,
+                .alwaysInteract,
+                .canSwitchLayer,
+            ],
+            timeout: 0
         )
-        guard eventStatus == noErr else {
-            throw Error.appleEventFailed(OSStatus(eventStatus))
-        }
-        defer {
-            AEDisposeDesc(&event)
-        }
-
-        let sendStatus = AESendMessage(
-            &event,
-            nil,
-            AESendMode(kAENoReply),
-            kAEDefaultTimeout
-        )
-        guard sendStatus == noErr else {
-            throw Error.appleEventFailed(sendStatus)
-        }
     }
 }

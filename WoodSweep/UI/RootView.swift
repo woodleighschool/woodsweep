@@ -4,6 +4,8 @@ import SwiftUI
 struct RootView: View {
     let coordinator: ResetCoordinator
 
+    @State private var restartError: String?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             header
@@ -76,8 +78,12 @@ struct RootView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(.secondary)
         case .restartRequired:
-            Text("Restart this Mac before returning it to service.")
-                .foregroundStyle(.secondary)
+            Text(
+                restartError
+                    ?? "Restart this Mac before returning it to service."
+            )
+            .fixedSize(horizontal: false, vertical: true)
+            .foregroundStyle(.secondary)
         }
     }
 
@@ -129,9 +135,16 @@ struct RootView: View {
                     quit()
                 }
             case .restartRequired:
-                Button("Later") {}
+                Button("Later") {
+                    quit()
+                }
                 Button("Restart") {
-                    coordinator.requestRestart()
+                    do {
+                        restartError = nil
+                        try coordinator.requestRestart()
+                    } catch {
+                        restartError = error.localizedDescription
+                    }
                 }
                 .keyboardShortcut(.defaultAction)
             }

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>PayloadIdentifier</key>
+            <string>au.edu.vic.woodleigh.WoodSweep.pppc</string>
+            <key>PayloadType</key>
+            <string>com.apple.TCC.configuration-profile-policy</string>
+            <key>PayloadUUID</key>
+            <string>84713EA1-5257-477A-A3A1-4C0E4A4D4D26</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+            <key>Services</key>
+            <dict>
+                <key>AppleEvents</key>
+                <array>
+                    <dict>
+                        <key>AEReceiverCodeRequirement</key>
+                        <string>identifier "com.apple.loginwindow" and anchor apple</string>
+                        <key>AEReceiverIdentifier</key>
+                        <string>com.apple.loginwindow</string>
+                        <key>AEReceiverIdentifierType</key>
+                        <string>bundleID</string>
+                        <key>Authorization</key>
+                        <string>Allow</string>
+                        <key>CodeRequirement</key>
+                        <string>anchor apple generic and identifier "au.edu.vic.woodleigh.WoodSweep" and (certificate leaf[field.1.2.840.113635.100.6.1.9] /* exists */ or certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = SMLKBTR495)</string>
+                        <key>Identifier</key>
+                        <string>au.edu.vic.woodleigh.WoodSweep</string>
+                        <key>IdentifierType</key>
+                        <string>bundleID</string>
+                    </dict>
+                </array>
+                <key>SystemPolicyAllFiles</key>
+                <array>
+                    <dict>
+                        <key>Authorization</key>
+                        <string>Allow</string>
+                        <key>CodeRequirement</key>
+                        <string>anchor apple generic and identifier "au.edu.vic.woodleigh.WoodSweep" and (certificate leaf[field.1.2.840.113635.100.6.1.9] /* exists */ or certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = SMLKBTR495)</string>
+                        <key>Identifier</key>
+                        <string>au.edu.vic.woodleigh.WoodSweep</string>
+                        <key>IdentifierType</key>
+                        <string>bundleID</string>
+                    </dict>
+                </array>
+            </dict>
+        </dict>
+    </array>
+    <key>PayloadDisplayName</key>
+    <string>WoodSweep Privacy</string>
+    <key>PayloadIdentifier</key>
+    <string>au.edu.vic.woodleigh.WoodSweep.privacy</string>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>164D31AA-6B6C-4544-B180-53B32A711AFD</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>

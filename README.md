@@ -37,6 +37,12 @@ kopia policy set --global \
 
 Repository policy also owns retention, compression, and maintenance.
 
+## Permissions
+
+Install [`Config/WoodSweep.mobileconfig`](Config/WoodSweep.mobileconfig) through
+MDM. It grants WoodSweep Full Disk Access and permission to request the macOS
+restart dialog from `loginwindow`.
+
 ## Development
 
 Open `WoodSweep.xcodeproj` in Xcode. Command-B builds and Product > Archive

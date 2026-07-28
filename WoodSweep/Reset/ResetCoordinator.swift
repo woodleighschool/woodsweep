@@ -173,7 +173,7 @@ final class ResetCoordinator {
         await performBackup()
     }
 
-    func requestRestart() {
+    func requestRestart() throws {
         guard state == .restartRequired else {
             return
         }
@@ -184,6 +184,7 @@ final class ResetCoordinator {
             Log.reset.error(
                 "Restart request failed: \(error.localizedDescription, privacy: .private)"
             )
+            throw error
         }
     }
 
