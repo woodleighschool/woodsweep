@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/woodleighschool/woodsweep/compare/0.1.1...0.1.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* **release:** sign archives with Developer ID ([85d8cc3](https://github.com/woodleighschool/woodsweep/commit/85d8cc3c7259c81c9a7ed60ac6e4d5c0e0e88b11))
+
 ## [0.1.1](https://github.com/woodleighschool/woodsweep/compare/0.1.0...0.1.1) (2026-07-28)
 
 
