@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/woodleighschool/woodsweep/compare/0.1.3...0.1.4) (2026-07-28)
+
+
+### Bug Fixes
+
+* **release:** distribute stapled app as ZIP ([29ab0f3](https://github.com/woodleighschool/woodsweep/commit/29ab0f3b02b67755381a5201e5a175548d91ffa5))
+
 ## [0.1.3](https://github.com/woodleighschool/woodsweep/compare/0.1.2...0.1.3) (2026-07-28)
 
 
