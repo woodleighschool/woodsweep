@@ -38,7 +38,7 @@
 		41187B0F2FBEF48D00E650FC /* WoodSweep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WoodSweep.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D10000012F00000000E650FC /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
 		D10000022F00000000E650FC /* WoodSweepTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WoodSweepTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		D20000022F00000000E650FC /* kopia */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "$(DERIVED_FILE_DIR)/Kopia/kopia"; sourceTree = "<absolute>"; };
+		D20000022F00000000E650FC /* kopia */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = kopia; path = "$(DERIVED_FILE_DIR)/Kopia/kopia"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +79,7 @@
 				D10000032F00000000E650FC /* WoodSweepTests */,
 				D10000052F00000000E650FC /* Config */,
 				41187B102FBEF48D00E650FC /* Products */,
+				4128D1443018411D00C8E08C /* Kopia */,
 			);
 			sourceTree = "<group>";
 		};
@@ -89,6 +90,14 @@
 				D10000022F00000000E650FC /* WoodSweepTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		4128D1443018411D00C8E08C /* Kopia */ = {
+			isa = PBXGroup;
+			children = (
+				D20000022F00000000E650FC /* kopia */,
+			);
+			name = Kopia;
 			sourceTree = "<group>";
 		};
 		D10000052F00000000E650FC /* Config */ = {
