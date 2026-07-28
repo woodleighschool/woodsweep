@@ -15,18 +15,12 @@ lockfile = true
 minimum_release_age = "12 hours"
 
 [tasks.format]
-description = "Format Swift and repository text files"
-run = [
-  "swiftformat WoodSweep WoodSweepTests",
-  "oxfmt . '!WoodSweep/AppIcon.icon/**' '!.mise/config.toml'",
-]
+description = "Format Swift code"
+run = "swiftformat WoodSweep WoodSweepTests"
 
 [tasks.fmt-check]
-description = "Check Swift and repository text formatting"
-run = [
-  "swiftformat WoodSweep WoodSweepTests --lint",
-  "oxfmt --check . '!WoodSweep/AppIcon.icon/**' '!.mise/config.toml'",
-]
+description = "Check Swift formatting"
+run = "swiftformat WoodSweep WoodSweepTests --lint"
 
 [tasks.periphery]
 description = "Build the app and reject unused Swift code"
