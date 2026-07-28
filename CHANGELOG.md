@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/woodleighschool/woodsweep/compare/0.1.2...0.1.3) (2026-07-28)
+
+
+### Bug Fixes
+
+* **restart:** request macOS restart dialog ([edc3f23](https://github.com/woodleighschool/woodsweep/commit/edc3f2321259dc4b80245dcba82bd2186c0fe104))
+
 ## [0.1.2](https://github.com/woodleighschool/woodsweep/compare/0.1.1...0.1.2) (2026-07-28)
 
 
