@@ -70,14 +70,14 @@ jobs:
           EXPORT_PATH="${RUNNER_TEMP}/export"
           NOTARY_KEY_PATH="${RUNNER_TEMP}/AuthKey.p8"
           APP_PATH="${EXPORT_PATH}/${APP_NAME}.app"
-          ZIP_PATH="${RUNNER_TEMP}/${APP_NAME}.zip"
-          trap 'rm -f "${ZIP_PATH}" "${NOTARY_KEY_PATH}"' EXIT
+          NOTARY_ZIP_PATH="${RUNNER_TEMP}/${APP_NAME}.zip"
+          trap 'rm -f "${NOTARY_ZIP_PATH}" "${NOTARY_KEY_PATH}"' EXIT
 
           printf '%s' "${NOTARY_KEY_BASE64}" | base64 -D > "${NOTARY_KEY_PATH}"
           chmod 600 "${NOTARY_KEY_PATH}"
-          ditto -c -k --keepParent "${APP_PATH}" "${ZIP_PATH}"
+          ditto -c -k --keepParent "${APP_PATH}" "${NOTARY_ZIP_PATH}"
 
-          xcrun notarytool submit "${ZIP_PATH}" \
+          xcrun notarytool submit "${NOTARY_ZIP_PATH}" \
             --key "${NOTARY_KEY_PATH}" \
             --key-id "${NOTARY_KEY_ID}" \
             --issuer "${NOTARY_ISSUER_ID}" \
@@ -86,23 +86,18 @@ jobs:
           xcrun stapler staple "${APP_PATH}"
           xcrun stapler validate "${APP_PATH}"
 
-      - name: Create unsigned DMG
+      - name: Create ZIP
         env:
           VERSION: ${{ github.event.release.tag_name }}
         run: |
-          DMG_STAGE="${RUNNER_TEMP}/dmg-stage"
           DIST_PATH="${GITHUB_WORKSPACE}/dist"
           EXPORT_PATH="${RUNNER_TEMP}/export"
-          mkdir -p "${DMG_STAGE}" "${DIST_PATH}"
-          ditto "${EXPORT_PATH}/${APP_NAME}.app" "${DMG_STAGE}/${APP_NAME}.app"
-          hdiutil create \
-            -volname "${APP_NAME}" \
-            -srcfolder "${DMG_STAGE}" \
-            -format UDZO \
-            -ov \
-            "${DIST_PATH}/${APP_NAME}-${VERSION}.dmg"
+          mkdir -p "${DIST_PATH}"
+          ditto -c -k --keepParent \
+            "${EXPORT_PATH}/${APP_NAME}.app" \
+            "${DIST_PATH}/${APP_NAME}-${VERSION}.zip"
 
-      - name: Upload DMG
+      - name: Upload ZIP
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
@@ -110,5 +105,5 @@ jobs:
           DIST_PATH="${GITHUB_WORKSPACE}/dist"
           gh release upload \
             "${RELEASE_TAG}" \
-            "${DIST_PATH}/${APP_NAME}-${RELEASE_TAG}.dmg" \
+            "${DIST_PATH}/${APP_NAME}-${RELEASE_TAG}.zip" \
             --clobber
