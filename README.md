@@ -25,8 +25,17 @@ Run the application executable as the target user:
 UserDefaults overlay. Secrets are stored in the target user's login Keychain
 under service `au.edu.vic.woodleigh.WoodSweep.credentials`.
 
-Repository policy owns snapshot exclusions, retention, compression, and
-maintenance.
+Set the repository-global snapshot policy once from a connected Kopia client:
+
+```sh
+kopia policy set --global \
+  --add-ignore="/Library" \
+  --ignore-identical-snapshots=true \
+  --ignore-file-errors=true \
+  --ignore-dir-errors=true
+```
+
+Repository policy also owns retention, compression, and maintenance.
 
 ## Development
 
