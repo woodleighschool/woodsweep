@@ -46,6 +46,9 @@ jobs:
             -configuration Release \
             -destination "generic/platform=macOS" \
             -archivePath "${ARCHIVE_PATH}" \
+            DEVELOPMENT_TEAM="SMLKBTR495" \
+            CODE_SIGN_STYLE="Manual" \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
             clean archive
 
       - name: Export Developer ID app
