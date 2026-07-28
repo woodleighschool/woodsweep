@@ -34,7 +34,9 @@ nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
 
     func resolve(username: String) throws -> TargetAccount {
         guard username.isEmpty == false,
-              username.withCString({ getpwnam($0) }) != nil
+              let accountHome = FileManager.default.homeDirectory(
+                  forUser: username
+              )
         else {
             throw Error.accountUnavailable
         }
@@ -58,12 +60,11 @@ nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
             throw Error.notConsoleUser
         }
 
-        let currentHome = FileManager.default.homeDirectoryForCurrentUser
-        guard currentHome.path.hasPrefix("/") else {
+        guard accountHome.path.hasPrefix("/") else {
             throw Error.homeUnavailable
         }
 
-        let standardizedHome = currentHome.standardizedFileURL
+        let standardizedHome = accountHome.standardizedFileURL
         guard standardizedHome.path != "/",
               standardizedHome.path != "/Users",
               try isRealDirectory(standardizedHome)
