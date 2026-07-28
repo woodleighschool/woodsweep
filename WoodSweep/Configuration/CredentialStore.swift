@@ -55,9 +55,6 @@ nonisolated struct KeychainCredentialStore: CredentialStoring {
         let data = Data(value.utf8)
         let attributes: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrAccessible as String:
-                kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            kSecAttrSynchronizable as String: false,
         ]
 
         let updateStatus = SecItemUpdate(
@@ -90,8 +87,6 @@ nonisolated struct KeychainCredentialStore: CredentialStoring {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.service,
             kSecAttrAccount as String: key.rawValue,
-            kSecUseDataProtectionKeychain as String: true,
-            kSecAttrSynchronizable as String: false,
         ]
     }
 
