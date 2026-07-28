@@ -16,11 +16,17 @@ minimum_release_age = "12 hours"
 
 [tasks.format]
 description = "Format Swift and repository text files"
-run = ["swiftformat WoodSweep WoodSweepTests", "oxfmt ."]
+run = [
+  "swiftformat WoodSweep WoodSweepTests",
+  "oxfmt . '!WoodSweep/AppIcon.icon/**'",
+]
 
 [tasks.fmt-check]
 description = "Check Swift and repository text formatting"
-run = ["swiftformat WoodSweep WoodSweepTests --lint", "oxfmt --check ."]
+run = [
+  "swiftformat WoodSweep WoodSweepTests --lint",
+  "oxfmt --check . '!WoodSweep/AppIcon.icon/**'",
+]
 
 [tasks.periphery]
 description = "Build the app and reject unused Swift code"

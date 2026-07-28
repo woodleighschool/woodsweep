@@ -32,10 +32,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO_NAME: ${{ github.event.repository.name }}
-          REPOSITORY_OWNER: ${{ github.repository_owner }}
         run: |
           RUN_URL=$(gh workflow run renovate.yaml \
-            --repo "${REPOSITORY_OWNER}/.github" \
+            --repo "${{ github.repository_owner }}/.github" \
             --ref main \
             --field "autodiscoverFilter=${REPO_NAME}")
           echo "run_id=${RUN_URL##*/}" >> "$GITHUB_OUTPUT"
@@ -43,20 +42,18 @@ jobs:
       - name: Await Renovate Completion
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          REPOSITORY_OWNER: ${{ github.repository_owner }}
           RUN_ID: ${{ steps.dispatch.outputs.run_id }}
         run: |
           gh run watch \
-            --repo "${REPOSITORY_OWNER}/.github" \
+            --repo "${{ github.repository_owner }}/.github" \
             "${RUN_ID}" \
             --exit-status
 
       - name: Renovate Output
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          REPOSITORY_OWNER: ${{ github.repository_owner }}
           RUN_ID: ${{ steps.dispatch.outputs.run_id }}
         run: |
           gh run view \
-            --repo "${REPOSITORY_OWNER}/.github" \
+            --repo "${{ github.repository_owner }}/.github" \
             --log "${RUN_ID}"

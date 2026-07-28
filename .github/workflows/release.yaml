@@ -3,10 +3,9 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  release:
+    types:
+      - published
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,58 +15,21 @@ permissions:
   contents: read
 
 jobs:
-  release-please:
-    name: Release Please
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-    outputs:
-      release-created: ${{ steps.release.outputs.release_created }}
-      tag-name: ${{ steps.release.outputs.tag_name }}
-      version: ${{ steps.release.outputs.version }}
-    steps:
-      - name: Generate token
-        id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ secrets.BOT_CLIENT_ID }}
-          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-          permission-contents: write
-          permission-issues: write
-          permission-pull-requests: write
-
-      - name: Release Please
-        id: release
-        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
   build:
     name: Build macOS release
-    needs: release-please
-    if: ${{ needs.release-please.outputs.release-created == 'true' }}
     runs-on: macos-26
     permissions:
       contents: write
     env:
       APP_NAME: WoodSweep
-      ARCHIVE_PATH: ${{ runner.temp }}/WoodSweep.xcarchive
-      DIST_PATH: ${{ github.workspace }}/dist
-      DMG_STAGE: ${{ runner.temp }}/dmg-stage
-      EXPORT_PATH: ${{ runner.temp }}/export
-      NOTARY_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
       PROJECT: WoodSweep.xcodeproj
       SCHEME: WoodSweep
     steps:
       - name: Checkout release
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
-          ref: ${{ needs.release-please.outputs.tag-name }}
 
       - name: Import Developer ID certificate
         uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
@@ -77,6 +39,7 @@ jobs:
 
       - name: Archive
         run: |
+          ARCHIVE_PATH="${RUNNER_TEMP}/WoodSweep.xcarchive"
           xcodebuild \
             -project "${PROJECT}" \
             -scheme "${SCHEME}" \
@@ -87,6 +50,8 @@ jobs:
 
       - name: Export Developer ID app
         run: |
+          ARCHIVE_PATH="${RUNNER_TEMP}/WoodSweep.xcarchive"
+          EXPORT_PATH="${RUNNER_TEMP}/export"
           xcodebuild \
             -exportArchive \
             -archivePath "${ARCHIVE_PATH}" \
@@ -99,6 +64,8 @@ jobs:
           NOTARY_KEY_BASE64: ${{ secrets.NOTARY_KEY_BASE64 }}
           NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
         run: |
+          EXPORT_PATH="${RUNNER_TEMP}/export"
+          NOTARY_KEY_PATH="${RUNNER_TEMP}/AuthKey.p8"
           APP_PATH="${EXPORT_PATH}/${APP_NAME}.app"
           ZIP_PATH="${RUNNER_TEMP}/${APP_NAME}.zip"
           trap 'rm -f "${ZIP_PATH}" "${NOTARY_KEY_PATH}"' EXIT
@@ -118,8 +85,11 @@ jobs:
 
       - name: Create unsigned DMG
         env:
-          VERSION: ${{ needs.release-please.outputs.version }}
+          VERSION: ${{ github.event.release.tag_name }}
         run: |
+          DMG_STAGE="${RUNNER_TEMP}/dmg-stage"
+          DIST_PATH="${GITHUB_WORKSPACE}/dist"
+          EXPORT_PATH="${RUNNER_TEMP}/export"
           mkdir -p "${DMG_STAGE}" "${DIST_PATH}"
           ditto "${EXPORT_PATH}/${APP_NAME}.app" "${DMG_STAGE}/${APP_NAME}.app"
           hdiutil create \
@@ -132,10 +102,10 @@ jobs:
       - name: Upload DMG
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ needs.release-please.outputs.tag-name }}
-          VERSION: ${{ needs.release-please.outputs.version }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
+          DIST_PATH="${GITHUB_WORKSPACE}/dist"
           gh release upload \
             "${RELEASE_TAG}" \
-            "${DIST_PATH}/${APP_NAME}-${VERSION}.dmg" \
+            "${DIST_PATH}/${APP_NAME}-${RELEASE_TAG}.dmg" \
             --clobber
