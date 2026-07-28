@@ -10,7 +10,7 @@ readonly CACHE_DIR="${DERIVED_FILE_DIR}/Kopia-${KOPIA_VERSION}"
 readonly SOURCE_DIR="${CACHE_DIR}/kopia-${KOPIA_VERSION}-macOS-universal"
 readonly SOURCE_BINARY="${SOURCE_DIR}/kopia"
 readonly SOURCE_LICENSE="${SOURCE_DIR}/LICENSE"
-readonly BUNDLE_BINARY="${TARGET_BUILD_DIR}/${EXECUTABLE_FOLDER_PATH}/kopia"
+readonly FETCHED_BINARY="${DERIVED_FILE_DIR}/Kopia/kopia"
 readonly BUNDLE_LICENSE="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Kopia-LICENSE.txt"
 
 if [[ ! -x "${SOURCE_BINARY}" || ! -f "${SOURCE_LICENSE}" ]]; then
@@ -26,6 +26,6 @@ if [[ ! -x "${SOURCE_BINARY}" || ! -f "${SOURCE_LICENSE}" ]]; then
     /bin/mv "${TEMP_DIR}/kopia-${KOPIA_VERSION}-macOS-universal" "${SOURCE_DIR}"
 fi
 
-/bin/mkdir -p "$(dirname "${BUNDLE_BINARY}")" "$(dirname "${BUNDLE_LICENSE}")"
-/usr/bin/install -m 0755 "${SOURCE_BINARY}" "${BUNDLE_BINARY}"
+/bin/mkdir -p "$(dirname "${FETCHED_BINARY}")" "$(dirname "${BUNDLE_LICENSE}")"
+/usr/bin/install -m 0755 "${SOURCE_BINARY}" "${FETCHED_BINARY}"
 /usr/bin/install -m 0644 "${SOURCE_LICENSE}" "${BUNDLE_LICENSE}"

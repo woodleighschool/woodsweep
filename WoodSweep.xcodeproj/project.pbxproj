@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D20000032F00000000E650FC /* kopia in Embed Kopia */ = {isa = PBXBuildFile; fileRef = D20000022F00000000E650FC /* kopia */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D10000062F00000000E650FC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -16,10 +20,25 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		D20000042F00000000E650FC /* Embed Kopia */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				D20000032F00000000E650FC /* kopia in Embed Kopia */,
+			);
+			name = "Embed Kopia";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		41187B0F2FBEF48D00E650FC /* WoodSweep.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WoodSweep.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D10000012F00000000E650FC /* Version.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Version.xcconfig; sourceTree = "<group>"; };
 		D10000022F00000000E650FC /* WoodSweepTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WoodSweepTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D20000022F00000000E650FC /* kopia */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "$(DERIVED_FILE_DIR)/Kopia/kopia"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -91,6 +110,7 @@
 				41187B0C2FBEF48D00E650FC /* Frameworks */,
 				41187B0D2FBEF48D00E650FC /* Resources */,
 				D20000012F00000000E650FC /* Fetch Kopia */,
+				D20000042F00000000E650FC /* Embed Kopia */,
 			);
 			buildRules = (
 			);
@@ -196,7 +216,7 @@
 			);
 			name = "Fetch Kopia";
 			outputPaths = (
-				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_FOLDER_PATH)/kopia",
+				"$(DERIVED_FILE_DIR)/Kopia/kopia",
 				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Kopia-LICENSE.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
