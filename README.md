@@ -11,7 +11,7 @@ Run the application executable as the target user:
 ```sh
 /Applications/WoodSweep.app/Contents/MacOS/WoodSweep configure \
   --username "TARGET_USERNAME" \
-  --endpoint "https://S3_ENDPOINT" \
+  --endpoint "S3_ENDPOINT" \
   --bucket "S3_BUCKET" \
   --region "S3_REGION_OR_AUTO" \
   --prefix "OPTIONAL_S3_PREFIX" \
