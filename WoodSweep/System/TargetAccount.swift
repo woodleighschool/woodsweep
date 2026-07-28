@@ -34,12 +34,10 @@ nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
 
     func resolve(username: String) throws -> TargetAccount {
         guard username.isEmpty == false,
-              let account = username.withCString({ getpwnam($0) }),
-              let homeDirectory = account.pointee.pw_dir
+              username.withCString({ getpwnam($0) }) != nil
         else {
             throw Error.accountUnavailable
         }
-        let accountHome = String(cString: homeDirectory)
 
         guard let effectiveAccount = getpwuid(geteuid()),
               let effectiveName = effectiveAccount.pointee.pw_name,
@@ -60,14 +58,12 @@ nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
             throw Error.notConsoleUser
         }
 
-        guard accountHome.hasPrefix("/") else {
+        let currentHome = FileManager.default.homeDirectoryForCurrentUser
+        guard currentHome.path.hasPrefix("/") else {
             throw Error.homeUnavailable
         }
 
-        let standardizedHome = URL(
-            filePath: accountHome,
-            directoryHint: .isDirectory
-        ).standardizedFileURL
+        let standardizedHome = currentHome.standardizedFileURL
         guard standardizedHome.path != "/",
               standardizedHome.path != "/Users",
               try isRealDirectory(standardizedHome)
