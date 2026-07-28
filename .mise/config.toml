@@ -18,14 +18,14 @@ minimum_release_age = "12 hours"
 description = "Format Swift and repository text files"
 run = [
   "swiftformat WoodSweep WoodSweepTests",
-  "oxfmt . '!WoodSweep/AppIcon.icon/**'",
+  "oxfmt . '!WoodSweep/AppIcon.icon/**' '!.mise/config.toml'",
 ]
 
 [tasks.fmt-check]
 description = "Check Swift and repository text formatting"
 run = [
   "swiftformat WoodSweep WoodSweepTests --lint",
-  "oxfmt --check . '!WoodSweep/AppIcon.icon/**'",
+  "oxfmt --check . '!WoodSweep/AppIcon.icon/**' '!.mise/config.toml'",
 ]
 
 [tasks.periphery]
