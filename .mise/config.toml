@@ -1,5 +1,4 @@
 [tools]
-node = "26.5.0"
 periphery = "3.8.0"
 swiftformat = "0.62.1"
 lefthook = "2.1.10"

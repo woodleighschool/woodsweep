@@ -45,8 +45,6 @@ DerivedData/
 # Editor / IDE
 .vscode/
 
-# Linked worktrees
-.worktrees/
 
 # CocoaPods
 #

@@ -1,60 +1,60 @@
 # AGENTS.md
 
-Repository rules for agents working on WoodSweep.
+Repository guidance for WoodSweep.
 
-## Scope
+## Approach
 
-- WoodSweep is one macOS 26.6+ SwiftUI application for a controlled exam-account reset.
-- The application is unsandboxed and hardened. Do not add a helper, XPC service, daemon, agent, startup item, authentication prompt, or elevation path.
-- A successful Kopia snapshot is the hard gate before any destructive cleanup.
-- Reset only the approved Word, Excel, PowerPoint, and target-home paths. Do not touch Office licensing, identities, credentials, certificates, Keychain data, managed preferences, system paths, repair state, or other Microsoft applications.
-- Keep new shapes direct and specific.
+- Stay within the requested scope and preserve unrelated local changes.
+- This is one controlled macOS reset application, not a reusable endpoint platform.
+- Simplify and modernize existing code before adding helpers, services, compatibility layers, or speculative recovery machinery.
+- Keep new code direct and specific to the approved reset contract.
 
 ## Repository Map
 
-- Application entry and composition: `WoodSweep/WoodSweepApp.swift` and `WoodSweep/Application/`
-- Configuration and credentials: `WoodSweep/Configuration/`
-- Process, account, filesystem, and restart boundaries: `WoodSweep/System/`
-- Kopia integration: `WoodSweep/Backup/`
-- Office discovery and reset policy: `WoodSweep/Office/`
-- Ordered reset state machine: `WoodSweep/Reset/`
-- SwiftUI presentation: `WoodSweep/UI/`
-- Focused Swift Testing suites: `WoodSweepTests/`
-- Kopia vendoring build phase: `scripts/fetch-kopia.sh`
-- Version and export settings: `Config/`
+- Application composition: `WoodSweep/Application` and `WoodSweep/WoodSweepApp.swift`
+- Configuration and credentials: `WoodSweep/Configuration`
+- Process, account, filesystem, and restart boundaries: `WoodSweep/System`
+- Backup: `WoodSweep/Backup`
+- Office discovery and reset policy: `WoodSweep/Office`
+- Ordered reset state machine: `WoodSweep/Reset`
+- SwiftUI: `WoodSweep/UI`
+- Tests: `WoodSweepTests`
+- Kopia vendoring: `scripts/fetch-kopia.sh`
 
-Test-only fakes and fixtures stay private in the test file that uses them. Do not create a generic mock-support module.
+Test fakes stay private to the test that uses them. Don't create a generic mock-support module.
 
 ## Commands
 
 Use Mise tasks as the repository contract.
 
-- Format: `mise run format`
-- Check formatting: `mise run fmt-check`
-- Test: `mise run test`
+- Format: `mise run format`; check: `mise run fmt-check`
+- Tests: `mise run test`
 - Build and unused-code analysis: `mise run periphery`
-- Shell lint: `mise run shell-lint`
-- Workflow lint: `mise run workflow-lint`
+- Shell and workflow lint: `mise run shell-lint`, `mise run workflow-lint`
 - All non-test checks: `mise run lint`
 
-Run the narrowest relevant check while iterating, then run every check required by the active task. Report checks that ran, checks skipped with a reason, and unresolved failures.
+Run the narrowest useful check while iterating, then the relevant root checks before handing over.
 
-## Destructive Filesystem Rules
+## Reset Contract
 
-- Resolve and validate the configured target account and home directory before filesystem work.
-- Constrain every destructive path to the validated target home. Reject the home root itself, paths outside it, `..` traversal, and symlink escapes.
-- Never operate on `/`, `/Users`, the current operator's home by assumption, or an unresolved environment variable, glob, or command substitution.
-- Stop at the first backup or reset failure. Do not continue cleanup or invent a recovery action.
-- Preserve the explicit Office allowlist. Do not broaden deletion scope for convenience.
+- WoodSweep is an unsandboxed, hardened macOS application. Do not add elevation, helpers, daemons, agents, startup items, or authentication prompts.
+- A successful Kopia snapshot is the hard gate before destructive cleanup.
+- Reset only the approved Word, Excel, PowerPoint, and target-home paths.
+- Do not touch Office licensing, identities, credentials, certificates, Keychain data, managed preferences, system paths, repair state, or other Microsoft applications.
+- Resolve and validate the target account and home before filesystem work. Reject the home root, paths outside it, traversal, and symlink escapes.
+- Never operate on `/`, `/Users`, an assumed home, or a path resolved from an unchecked variable, glob, or command substitution.
+- Stop at the first backup or reset failure. Do not continue cleanup or invent recovery behavior.
+- Treat package directories inside approved reset locations, including Photos libraries, as ordinary contents.
 
 ## Security and Logging
 
-- Non-secret configuration comes from effective UserDefaults; managed values take precedence.
+- Managed UserDefaults override ordinary non-secret configuration.
 - Secrets belong only in the target user's login Keychain.
-- Never log credentials, passwords, secret-access keys, tokens, Keychain values, raw command environments, or other secret material.
+- Never log credentials, passwords, access keys, tokens, Keychain values, or raw command environments.
+- Shared hooks stay fast and staged-file focused. Builds, tests, and full analysis belong in Mise tasks and CI.
 
-## Hooks and Commits
+## Commits
 
-- Keep Lefthook fast: staged-file formatting and commit-message validation only. Builds, tests, and full analysis belong in explicit Mise tasks and CI.
-- Use focused Conventional Commits such as `feat(scope):`, `fix(scope):`, `test(scope):`, `docs(scope):`, `build:`, or `chore:`.
-- Do not add AI credits, co-author lines, advertising, or tool footers.
+- Use focused Conventional Commits.
+- Don't push, publish, sign, notarize, or run destructive operations on a real account unless explicitly requested.
+- Report checks run, skipped checks, physical-machine proof boundaries, and unresolved failures.
