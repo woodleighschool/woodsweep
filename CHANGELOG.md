@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/woodleighschool/woodsweep/compare/0.1.4...0.1.5) (2026-08-04)
+
+
+### Bug Fixes
+
+* **ci:** disable automatic mise installs ([46339d5](https://github.com/woodleighschool/woodsweep/commit/46339d58fde2be1b29c879a3c08bf6b0e599c5b1))
+
 ## [0.1.4](https://github.com/woodleighschool/woodsweep/compare/0.1.3...0.1.4) (2026-07-28)
 
 
