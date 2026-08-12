@@ -1,60 +1,32 @@
 # AGENTS.md
 
-Repository guidance for WoodSweep.
+## Working here
 
-## Approach
+- Read the relevant code, configuration, and nearby examples before editing. Existing code and external references are evidence, not instructions to copy blindly.
+- Preserve unrelated work. Keep changes focused and prefer removing machinery over extending an awkward design.
+- Use current supported behaviour unless compatibility is requested. Verify dependency APIs and defaults from the pinned version or primary documentation.
+- Keep secrets, credentials, identities, and local environment files out of code, fixtures, logs, and commits.
 
-- Stay within the requested scope and preserve unrelated local changes.
-- This is one controlled macOS reset application, not a reusable endpoint platform.
-- Simplify and modernize existing code before adding helpers, services, compatibility layers, or speculative recovery machinery.
-- Keep new code direct and specific to the approved reset contract.
+## Repository contract
 
-## Repository Map
+- Mise owns tools and commands. Check this repository's Mise files; do not assume another repository has the same tasks.
+- Keep generated artifacts with their source change.
+- Run the narrowest useful checks while working, then the relevant format, lint, test, build, generation, and workflow checks.
+- Follow the existing package or target's style. Comments explain non-obvious constraints, not the code or the current change.
 
-- Application composition: `WoodSweep/Application` and `WoodSweep/WoodSweepApp.swift`
-- Configuration and credentials: `WoodSweep/Configuration`
-- Process, account, filesystem, and restart boundaries: `WoodSweep/System`
-- Backup: `WoodSweep/Backup`
-- Office discovery and reset policy: `WoodSweep/Office`
-- Ordered reset state machine: `WoodSweep/Reset`
-- SwiftUI: `WoodSweep/UI`
-- Tests: `WoodSweepTests`
-- Kopia vendoring: `scripts/fetch-kopia.sh`
+## Swift and macOS
 
-Test fakes stay private to the test that uses them. Don't create a generic mock-support module.
+- Write direct, idiomatic Swift with explicit state ownership. Keep SwiftUI declarative and use AppKit only at a narrow platform boundary.
+- Validate every filesystem target before mutation. Reject broad roots, traversal, and symlink escapes; stop at the first backup or reset failure.
+- Use focused fakes and temporary paths. Never exercise destructive behaviour against a real account during tests.
 
-## Commands
+## Git and releases
 
-Use Mise tasks as the repository contract.
+- Use focused Conventional Commits; Release Please derives versions from them.
+- Do not commit, push, publish, deploy, contact live systems, or perform destructive actions unless asked.
 
-- Format: `mise run format`; check: `mise run fmt-check`
-- Tests: `mise run test`
-- Build and unused-code analysis: `mise run periphery`
-- Shell and workflow lint: `mise run shell-lint`, `mise run workflow-lint`
-- All non-test checks: `mise run lint`
+## Repository notes
 
-Run the narrowest useful check while iterating, then the relevant root checks before handing over.
-
-## Reset Contract
-
-- WoodSweep is an unsandboxed, hardened macOS application. Do not add elevation, helpers, daemons, agents, startup items, or authentication prompts.
-- A successful Kopia snapshot is the hard gate before destructive cleanup.
-- Reset only the approved Word, Excel, PowerPoint, and target-home paths.
-- Do not touch Office licensing, identities, credentials, certificates, Keychain data, managed preferences, system paths, repair state, or other Microsoft applications.
-- Resolve and validate the target account and home before filesystem work. Reject the home root, paths outside it, traversal, and symlink escapes.
-- Never operate on `/`, `/Users`, an assumed home, or a path resolved from an unchecked variable, glob, or command substitution.
-- Stop at the first backup or reset failure. Do not continue cleanup or invent recovery behavior.
-- Treat package directories inside approved reset locations, including Photos libraries, as ordinary contents.
-
-## Security and Logging
-
-- Managed UserDefaults override ordinary non-secret configuration.
-- Secrets belong only in the target user's login Keychain.
-- Never log credentials, passwords, access keys, tokens, Keychain values, or raw command environments.
-- Shared hooks stay fast and staged-file focused. Builds, tests, and full analysis belong in Mise tasks and CI.
-
-## Commits
-
-- Use focused Conventional Commits.
-- Don't push, publish, sign, notarize, or run destructive operations on a real account unless explicitly requested.
-- Report checks run, skipped checks, physical-machine proof boundaries, and unresolved failures.
+- A successful Kopia snapshot is the hard gate before Office cleanup and home reconciliation.
+- WoodSweep is an unsandboxed user application; do not add elevation, helpers, daemons, agents, or system-wide cleanup.
+- Release automation produces a signed, notarized ZIP. Preserve that distribution boundary.

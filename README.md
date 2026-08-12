@@ -1,16 +1,27 @@
-# WoodSweep
+# woodsweep
 
-WoodSweep snapshots the current login user's home through a Kopia Repository
-Server, resets Word, Excel, and PowerPoint user state, and reconciles that home
-only after the snapshot succeeds.
+Snapshots the current user’s home to a Kopia Repository Server, resets Word, Excel, and PowerPoint user state, then reconciles the home only after the snapshot succeeds.
 
-## Repository Server
+## 🚀 Usage
 
-WoodSweep requires one Kopia Repository Server with a system-trusted TLS
-certificate. Enable Kopia's default ACLs, create a shared bootstrap repository
-user, and grant it permission to provision users:
+Download the signed and notarized ZIP from the [latest release](https://github.com/woodleighschool/woodsweep/releases/latest), move the app to `/Applications`, and deploy [`Config/WoodSweep.mobileconfig`](Config/WoodSweep.mobileconfig).
 
-```sh
+Bootstrap the logged-in user once:
+
+```bash
+/Applications/WoodSweep.app/Contents/MacOS/WoodSweep bootstrap \
+  --server-url "https://kopia.example:51515" \
+  --bootstrap-user "bootstrap@woodsweep" \
+  --bootstrap-password "BOOTSTRAP_PASSWORD"
+```
+
+Bootstrap creates a machine-specific Kopia user and stores only its generated password in the login Keychain. After that, open the app and confirm the reset.
+
+## ⚙️ Configuration
+
+The app requires a Kopia Repository Server with a system-trusted certificate and default ACLs enabled:
+
+```bash
 kopia server acl enable
 kopia server users add bootstrap@woodsweep \
   --user-password "BOOTSTRAP_PASSWORD"
@@ -20,24 +31,11 @@ kopia server acl add \
   --target type=user
 ```
 
-Start the server control API with that same bootstrap identity and password.
-WoodSweep uses it only to refresh Kopia's user cache immediately after adding
-or changing a machine user:
+The server control API must use the same bootstrap identity so the app can refresh Kopia’s user cache after provisioning a machine account.
 
-```sh
-kopia server start \
-  --address 0.0.0.0:51515 \
-  --tls-cert-file /path/to/server.pem \
-  --tls-key-file /path/to/server-key.pem \
-  --server-control-username bootstrap@woodsweep \
-  --server-control-password "BOOTSTRAP_PASSWORD" \
-  --no-ui
-```
+Repository policy owns retention, compression, maintenance, and exclusions. A typical global policy is:
 
-Set the repository-global snapshot policy once from a directly connected Kopia
-client:
-
-```sh
+```bash
 kopia policy set --global \
   --add-ignore="/Library" \
   --ignore-identical-snapshots=true \
@@ -45,74 +43,26 @@ kopia policy set --global \
   --ignore-dir-errors=true
 ```
 
-Repository policy also owns retention, compression, and maintenance.
+At launch, the effective process user must be the active console user with a validated `/Users/<username>` home. Missing configuration, unsafe paths, unavailable backup, or missing credentials stops before cleanup.
 
-## Bootstrap
+## 🧑‍💻 Development
 
-Run bootstrap as the logged-in user after installing the app:
+Open `WoodSweep.xcodeproj` in Xcode, or use the repository tasks:
 
-```sh
-/Applications/WoodSweep.app/Contents/MacOS/WoodSweep bootstrap \
-  --server-url "https://kopia.example:51515" \
-  --bootstrap-user "bootstrap@woodsweep" \
-  --bootstrap-password "BOOTSTRAP_PASSWORD"
-```
-
-Bootstrap derives the first, lowercased label of the Mac hostname, creates or
-updates `woodsweep@<hostname>`, generates a random machine password, connects
-the permanent client, and then stores only that generated password in the
-logged-in user's login Keychain. Transient bootstrap repository state is
-removed and the bootstrap credentials are not persisted.
-
-At launch WoodSweep requires the effective process user to be the active
-console user with a validated `/Users/<username>` home. Missing configuration,
-missing Keychain credentials, an unsafe home, or an unavailable Kopia server
-stops before confirmation or cleanup. A snapshot source is therefore naturally
-shaped like:
-
-```text
-woodsweep@sc-sac-01:/Users/sacuser
-```
-
-## Local Kopia Server
-
-The local server task initializes one persistent filesystem repository under
-`.local/kopia`, enables ACLs, provisions `bootstrap@woodsweep`, and serves it
-with a locally trusted certificate:
-
-```sh
-mise run dev-tls-trust
-mise run kopia-server
-```
-
-Its fixed development inputs are:
-
-```text
-URL:                https://localhost:51515
-bootstrap user:     bootstrap@woodsweep
-bootstrap password: woodsweep-test-bootstrap
-```
-
-The server stays in the foreground and stops with Ctrl-C. Its ignored local
-state remains available for the next run. The task only starts Kopia; it does
-not launch WoodSweep or exercise reset code.
-
-## Permissions
-
-[`Config/WoodSweep.mobileconfig`](Config/WoodSweep.mobileconfig) grants
-WoodSweep Full Disk Access and permission to request the macOS restart dialog
-from `loginwindow`.
-
-## Development
-
-Open `WoodSweep.xcodeproj` in Xcode. Command-B builds and Product > Archive
-creates an archive.
-
-Repository checks are available through Mise:
-
-```sh
+```bash
 mise run lint
 mise run test
 ```
 
-Release Please and GitHub Actions publish signed and notarized releases.
+A local Kopia server is available for development:
+
+```bash
+mise run dev-tls-trust
+mise run kopia-server
+```
+
+It stores ignored state under `.local/kopia`, stays in the foreground, and does not run the app or exercise reset behaviour.
+
+## 📄 License
+
+Licensed under the [Apache License 2.0](LICENSE).
