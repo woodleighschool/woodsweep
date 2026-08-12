@@ -1,6 +1,6 @@
 ---
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: Lint
+name: CI
 
 on:
   push:
@@ -20,19 +20,21 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 env:
   MISE_NO_HOOKS: "1"
+  MISE_TASK_RUN_AUTO_INSTALL: "false"
 
 jobs:
-  lint:
-    name: Lint
+  app:
+    name: App
     runs-on: macos-26
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -42,8 +44,12 @@ jobs:
       - name: Setup Mise
         uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
         with:
+          cache: false
           experimental: true
-          install_args: --locked
+          install_args: --locked periphery swiftformat shellcheck actionlint zizmor
 
-      - name: Run lint
+      - name: Run non-test checks
         run: mise run lint
+
+      - name: Run tests
+        run: mise run test
