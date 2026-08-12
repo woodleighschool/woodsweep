@@ -6,6 +6,8 @@ actionlint = "1.7.12"
 zizmor = "1.29.0"
 oxfmt = "0.63.0"
 shellcheck = "0.11.0"
+mkcert = "1.4.4"
+kopia = "v0.23.1"
 "npm:@commitlint/cli" = "21.2.1"
 
 [settings]
@@ -46,6 +48,26 @@ xcodebuild test \
   -destination 'platform=macOS' \
   CODE_SIGNING_ALLOWED=NO
 """
+
+[tasks.dev-tls]
+description = "Create a local TLS certificate for the Kopia test server"
+run = """
+mkdir -p .local/tls/ca
+CAROOT="$PWD/.local/tls/ca" mkcert \
+  -cert-file .local/tls/kopia.pem \
+  -key-file .local/tls/kopia-key.pem \
+  localhost 127.0.0.1 ::1 kopia
+"""
+
+[tasks.dev-tls-trust]
+description = "Trust the local Kopia test CA in the macOS login Keychain"
+depends = ["dev-tls"]
+run = 'CAROOT="$PWD/.local/tls/ca" mkcert -install'
+
+[tasks.kopia-server]
+description = "Run the local Kopia Repository Server in the foreground"
+depends = ["dev-tls"]
+run = "./scripts/start-kopia-server.sh"
 
 [tasks.shell-lint]
 description = "Lint repository shell scripts"

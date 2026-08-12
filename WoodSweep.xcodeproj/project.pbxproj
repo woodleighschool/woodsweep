@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D20000032F00000000E650FC /* kopia in Embed Kopia */ = {isa = PBXBuildFile; fileRef = D20000022F00000000E650FC /* kopia */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		D30000012F00000000E650FC /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = D30000022F00000000E650FC /* ArgumentParser */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D30000012F00000000E650FC /* ArgumentParser in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +132,7 @@
 			);
 			name = WoodSweep;
 			packageProductDependencies = (
+				D30000022F00000000E650FC /* ArgumentParser */,
 			);
 			productName = WoodSweep;
 			productReference = 41187B0F2FBEF48D00E650FC /* WoodSweep.app */;
@@ -186,6 +189,9 @@
 			);
 			mainGroup = 41187B062FBEF48D00E650FC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D30000032F00000000E650FC /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 41187B102FBEF48D00E650FC /* Products */;
 			projectDirPath = "";
@@ -521,6 +527,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D30000032F00000000E650FC /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser";
+			requirement = {
+				kind = exactVersion;
+				version = 1.8.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D30000022F00000000E650FC /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D30000032F00000000E650FC /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 41187B072FBEF48D00E650FC /* Project object */;
 }

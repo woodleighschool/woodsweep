@@ -1,19 +1,12 @@
 import Foundation
 
 nonisolated struct KopiaRepositoryConfig: Decodable {
-    struct Storage: Decodable {
-        struct S3: Decodable {
-            let bucket: String
-            let endpoint: String
-            let accessKeyID: String
-            let secretAccessKey: String
-            let prefix: String?
-            let region: String?
-        }
-
-        let type: String
-        let config: S3
+    struct APIServer: Decodable {
+        let url: String
+        let serverCertFingerprint: String?
     }
 
-    let storage: Storage
+    let apiServer: APIServer?
+    let hostname: String
+    let username: String
 }

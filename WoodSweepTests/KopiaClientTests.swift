@@ -4,7 +4,7 @@ import Testing
 
 @Suite("Kopia client")
 struct KopiaClientTests {
-    @Test("missing config connects and validates")
+    @Test("missing config connects to the server and validates")
     func connectsMissingRepository() async throws {
         let fixture = try KopiaFixture()
         let runner = RecordingProcessRunner(results: [.success, .status])
@@ -21,15 +21,12 @@ struct KopiaClientTests {
             invocations.allSatisfy { $0.executable == fixture.executable }
         )
         #expect(invocations[0].arguments == fixture.baseArguments + [
-            "repository", "connect", "s3",
-            "--bucket", "exam-backups",
-            "--endpoint", "s3.example.test",
-            "--access-key", "access",
-            "--secret-access-key", "secret",
+            "repository", "connect", "server",
+            "--url", "https://kopia.example.test:51515",
             "--cache-directory", fixture.cacheDirectory.path,
             "--no-check-for-updates",
-            "--region", "ap-southeast-2",
-            "--prefix", "sac/",
+            "--override-username", "woodsweep",
+            "--override-hostname", "sc-sac-01",
         ])
         #expect(invocations[1].arguments == fixture.baseArguments + [
             "repository", "status", "--json",
@@ -37,12 +34,12 @@ struct KopiaClientTests {
         #expect(
             invocations.allSatisfy {
                 $0.arguments.contains("--no-persist-credentials")
-                    && $0.arguments.contains("password")
+                    && $0.arguments.contains("machine-password")
             }
         )
     }
 
-    @Test("matching connected settings skip reconnect")
+    @Test("matching server settings skip reconnect")
     func keepsMatchingRepositoryConnected() async throws {
         let fixture = try KopiaFixture()
         try fixture.writeRepositoryConfig()
@@ -62,25 +59,12 @@ struct KopiaClientTests {
         #expect(FileManager.default.fileExists(atPath: fixture.configFile.path))
     }
 
-    @Test("empty optional settings match omitted settings")
-    func normalizesOptionalSettings() async throws {
-        let fixture = try KopiaFixture(region: nil, prefix: nil)
-        try fixture.writeRepositoryConfig(region: "", prefix: "")
-        let runner = RecordingProcessRunner(results: [.status])
-        let client = KopiaClient(
-            processRunner: runner,
-            executableProvider: { fixture.executable }
-        )
-
-        try await client.prepare(fixture.context)
-
-        #expect(await runner.invocations.count == 1)
-    }
-
-    @Test("stale settings replace only local config and retain cache")
+    @Test("stale server URL replaces only local config and retains cache")
     func replacesStaleRepositoryConfig() async throws {
         let fixture = try KopiaFixture()
-        try fixture.writeRepositoryConfig(bucket: "old-bucket")
+        try fixture.writeRepositoryConfig(
+            serverURL: "https://old-kopia.example.test:51515"
+        )
         try FileManager.default.createDirectory(
             at: fixture.cacheDirectory,
             withIntermediateDirectories: true
@@ -99,6 +83,151 @@ struct KopiaClientTests {
         #expect(invocations.count == 2)
         #expect(invocations[0].arguments.contains(fixture.cacheDirectory.path))
         #expect(FileManager.default.fileExists(atPath: cachedBlob.path))
+        #expect(
+            FileManager.default.fileExists(atPath: fixture.configFile.path)
+                == false
+        )
+    }
+
+    @Test("fingerprint-pinned config is replaced for system TLS trust")
+    func replacesFingerprintConfig() async throws {
+        let fixture = try KopiaFixture()
+        try fixture.writeRepositoryConfig(fingerprint: "ABC123")
+        let runner = RecordingProcessRunner(results: [.success, .status])
+        let client = KopiaClient(
+            processRunner: runner,
+            executableProvider: { fixture.executable }
+        )
+
+        try await client.prepare(fixture.context)
+
+        #expect(await runner.invocations.count == 2)
+    }
+
+    @Test("bootstrap adds and immediately activates the machine user")
+    func bootstrapsNewMachineUser() async throws {
+        let fixture = try KopiaFixture()
+        let runner = RecordingProcessRunner(results: [
+            .success,
+            .users([]),
+            .success,
+            .success,
+            .success,
+            .status,
+        ])
+        let client = KopiaClient(
+            processRunner: runner,
+            executableProvider: { fixture.executable }
+        )
+
+        try await client.bootstrap(
+            credentials: fixture.bootstrapCredentials,
+            context: fixture.context
+        )
+
+        let invocations = await runner.invocations
+        #expect(invocations.count == 6)
+        #expect(invocations[0].arguments == fixture.bootstrapBaseArguments + [
+            "repository", "connect", "server",
+            "--url", fixture.context.serverURL,
+            "--cache-directory",
+            fixture.bootstrapDirectory.appending(path: "cache").path,
+            "--no-check-for-updates",
+            "--override-username", "bootstrap",
+            "--override-hostname", "woodsweep",
+        ])
+        #expect(invocations[1].arguments == fixture.bootstrapBaseArguments + [
+            "server", "users", "list", "--json",
+        ])
+        #expect(invocations[2].arguments == fixture.bootstrapBaseArguments + [
+            "server", "users", "add", "woodsweep@sc-sac-01",
+            "--user-password", "machine-password",
+        ])
+        #expect(invocations[3].arguments == [
+            "server", "refresh",
+            "--address", fixture.context.serverURL,
+            "--server-control-username", "bootstrap@woodsweep",
+            "--server-control-password", "bootstrap-password",
+        ])
+        #expect(invocations[4].arguments == fixture.baseArguments + [
+            "repository", "connect", "server",
+            "--url", fixture.context.serverURL,
+            "--cache-directory", fixture.cacheDirectory.path,
+            "--no-check-for-updates",
+            "--override-username", "woodsweep",
+            "--override-hostname", "sc-sac-01",
+        ])
+        #expect(invocations[5].arguments == fixture.baseArguments + [
+            "repository", "status", "--json",
+        ])
+        #expect(
+            FileManager.default.fileExists(
+                atPath: fixture.bootstrapDirectory.path
+            ) == false
+        )
+    }
+
+    @Test("bootstrap rotates an existing machine user's password")
+    func bootstrapsExistingMachineUser() async throws {
+        let fixture = try KopiaFixture()
+        try fixture.writeRepositoryConfig()
+        let runner = RecordingProcessRunner(results: [
+            .success,
+            .users(["woodsweep@sc-sac-01"]),
+            .success,
+            .success,
+            .success,
+            .status,
+        ])
+        let client = KopiaClient(
+            processRunner: runner,
+            executableProvider: { fixture.executable }
+        )
+
+        try await client.bootstrap(
+            credentials: fixture.bootstrapCredentials,
+            context: fixture.context
+        )
+
+        let invocations = await runner.invocations
+        #expect(invocations[2].arguments.contains("set"))
+        #expect(invocations[2].arguments.contains("add") == false)
+        #expect(
+            FileManager.default.fileExists(atPath: fixture.configFile.path)
+                == false
+        )
+    }
+
+    @Test("failed bootstrap removes transient state and never connects machine")
+    func cleansUpFailedBootstrap() async throws {
+        let fixture = try KopiaFixture()
+        let runner = RecordingProcessRunner(results: [
+            .success,
+            .users([]),
+            ProcessResult(
+                terminationStatus: 1,
+                standardOutput: "",
+                standardError: "access denied"
+            ),
+        ])
+        let client = KopiaClient(
+            processRunner: runner,
+            executableProvider: { fixture.executable }
+        )
+
+        await #expect(throws: KopiaClient.Error.self) {
+            try await client.bootstrap(
+                credentials: fixture.bootstrapCredentials,
+                context: fixture.context
+            )
+        }
+
+        #expect(await runner.invocations.count == 3)
+        #expect(
+            FileManager.default.fileExists(
+                atPath: fixture.bootstrapDirectory.path
+            ) == false
+        )
         #expect(
             FileManager.default.fileExists(atPath: fixture.configFile.path)
                 == false
@@ -205,27 +334,29 @@ struct KopiaClientTests {
         #expect(FileManager.default.fileExists(atPath: nestedFile.path))
     }
 
-    @Test("non-empty optional values retain their exact bytes")
-    func preservesOptionalSettingBytes() async throws {
-        let fixture = try KopiaFixture(
-            region: " ap-southeast-2 ",
-            prefix: " sac/ "
-        )
-        let runner = RecordingProcessRunner(results: [.success, .status])
-        let client = KopiaClient(
-            processRunner: runner,
-            executableProvider: { fixture.executable }
-        )
+    @Test("context normalizes URL and hostname and rejects non-system TLS")
+    func validatesContextIdentity() throws {
+        let fixture = try KopiaFixture()
 
-        try await client.prepare(fixture.context)
+        #expect(fixture.context.serverURL
+            == "https://kopia.example.test:51515")
+        #expect(fixture.context.hostname == "sc-sac-01")
+        #expect(fixture.context.user.value == "woodsweep@sc-sac-01")
 
-        let arguments = try #require(
-            await runner.invocations.first?.arguments
-        )
-        let regionIndex = try #require(arguments.firstIndex(of: "--region"))
-        let prefixIndex = try #require(arguments.firstIndex(of: "--prefix"))
-        #expect(arguments[regionIndex + 1] == " ap-southeast-2 ")
-        #expect(arguments[prefixIndex + 1] == " sac/ ")
+        for serverURL in [
+            "http://kopia.example.test:51515",
+            "https://user@kopia.example.test:51515",
+            "https://kopia.example.test:51515?fingerprint=abc",
+        ] {
+            #expect(throws: KopiaContext.Error.invalidServerURL) {
+                try KopiaContext(
+                    serverURL: serverURL,
+                    serverPassword: "machine-password",
+                    hostname: "sc-sac-01",
+                    homeURL: fixture.homeDirectory
+                )
+            }
+        }
     }
 
     @Test("snapshot has the resolved home as its only source")
@@ -274,7 +405,7 @@ struct KopiaClientTests {
         } catch {
             let description = error.localizedDescription
             #expect(description.contains("repository unavailable"))
-            #expect(description.contains("password") == false)
+            #expect(description.contains("machine-password") == false)
             #expect(description.contains("--config-file") == false)
         }
     }
@@ -352,19 +483,34 @@ private final class KopiaFixture: @unchecked Sendable {
     let outsideDirectory: URL
     let configFile: URL
     let cacheDirectory: URL
+    let bootstrapDirectory: URL
     let executable: URL
     let context: KopiaContext
+    let bootstrapCredentials = KopiaBootstrapCredentials(
+        user: KopiaUser("bootstrap@woodsweep")!,
+        password: "bootstrap-password"
+    )
 
     var baseArguments: [String] {
         [
             "--config-file", configFile.path,
-            "--password", "password",
+            "--password", "machine-password",
             "--no-persist-credentials",
             "--no-progress",
         ]
     }
 
-    init(region: String? = "ap-southeast-2", prefix: String? = "sac/") throws {
+    var bootstrapBaseArguments: [String] {
+        [
+            "--config-file",
+            bootstrapDirectory.appending(path: "repository.config").path,
+            "--password", "bootstrap-password",
+            "--no-persist-credentials",
+            "--no-progress",
+        ]
+    }
+
+    init() throws {
         let root = FileManager.default.temporaryDirectory.appending(
             path: UUID().uuidString,
             directoryHint: .isDirectory
@@ -386,17 +532,9 @@ private final class KopiaFixture: @unchecked Sendable {
             withIntermediateDirectories: false
         )
         let context = try KopiaContext(
-            settings: RepositorySettings(
-                endpoint: "s3.example.test",
-                bucket: "exam-backups",
-                region: region,
-                prefix: prefix,
-                accessKeyID: "access"
-            ),
-            credentials: RepositoryCredentials(
-                secretAccessKey: "secret",
-                repositoryPassword: "password"
-            ),
+            serverURL: "https://kopia.example.test:51515/",
+            serverPassword: "machine-password",
+            hostname: "SC-SAC-01.example.test",
             homeURL: homeDirectory
         )
         self.root = root
@@ -404,6 +542,7 @@ private final class KopiaFixture: @unchecked Sendable {
         self.outsideDirectory = outsideDirectory
         configFile = context.configFile
         cacheDirectory = context.cacheDirectory
+        bootstrapDirectory = context.bootstrapDirectory
         executable = root.appending(path: "kopia")
         self.context = context
     }
@@ -413,9 +552,8 @@ private final class KopiaFixture: @unchecked Sendable {
     }
 
     func writeRepositoryConfig(
-        bucket: String = "exam-backups",
-        region: String? = "ap-southeast-2",
-        prefix: String? = "sac/",
+        serverURL: String = "https://kopia.example.test:51515",
+        fingerprint: String = "",
         at destination: URL? = nil
     ) throws {
         let destination = destination ?? configFile
@@ -423,26 +561,15 @@ private final class KopiaFixture: @unchecked Sendable {
             at: destination.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        let optionalValues = [
-            region.map { "\"region\":\"\($0)\"," } ?? "",
-            prefix.map { "\"prefix\":\"\($0)\"," } ?? "",
-        ].joined()
-        let json = """
-        {
-          "storage": {
-            "type": "s3",
-            "config": {
-              "bucket": "\(bucket)",
-              "endpoint": "s3.example.test",
-              "accessKeyID": "access",
-              "secretAccessKey": "secret",
-              \(optionalValues)
-              "unused": "ignored"
-            }
-          }
-        }
-        """
-        try Data(json.utf8).write(to: destination)
+        let data = try JSONSerialization.data(withJSONObject: [
+            "apiServer": [
+                "url": serverURL,
+                "serverCertFingerprint": fingerprint,
+            ],
+            "hostname": "sc-sac-01",
+            "username": "woodsweep",
+        ])
+        try data.write(to: destination)
     }
 }
 
@@ -457,4 +584,15 @@ private extension ProcessResult {
         standardOutput: "{}",
         standardError: ""
     )
+
+    static func users(_ usernames: [String]) -> ProcessResult {
+        let data = try! JSONSerialization.data(
+            withJSONObject: usernames.map { ["username": $0] }
+        )
+        return ProcessResult(
+            terminationStatus: 0,
+            standardOutput: String(decoding: data, as: UTF8.self),
+            standardError: ""
+        )
+    }
 }

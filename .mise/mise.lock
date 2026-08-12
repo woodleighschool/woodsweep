@@ -46,6 +46,45 @@ url = "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_
 url_api = "https://api.github.com/repos/rhysd/actionlint/releases/assets/384924919"
 provenance = "github-attestations"
 
+[[tools.kopia]]
+version = "v0.23.1"
+backend = "aqua:kopia/kopia"
+
+[tools.kopia."platforms.linux-arm64"]
+checksum = "sha256:a4ffbc019e0b0f932e2632054e73ec521dc1e80172a00095369c53ecf4e5a6cb"
+url = "https://github.com/kopia/kopia/releases/download/v0.23.1/kopia-0.23.1-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/kopia/kopia/releases/assets/448730939"
+
+[tools.kopia."platforms.linux-arm64-musl"]
+checksum = "sha256:a4ffbc019e0b0f932e2632054e73ec521dc1e80172a00095369c53ecf4e5a6cb"
+url = "https://github.com/kopia/kopia/releases/download/v0.23.1/kopia-0.23.1-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/kopia/kopia/releases/assets/448730939"
+
+[tools.kopia."platforms.linux-x64"]
+checksum = "sha256:416d0f84a3dbb321a8b2d8f0997b1a0a6e915babe79ee76fa6e4d2bd1e1c5178"
+url = "https://github.com/kopia/kopia/releases/download/v0.23.1/kopia-0.23.1-linux-x64.tar.gz"
+url_api = "https://api.github.com/repos/kopia/kopia/releases/assets/448730944"
+
+[tools.kopia."platforms.linux-x64-musl"]
+checksum = "sha256:416d0f84a3dbb321a8b2d8f0997b1a0a6e915babe79ee76fa6e4d2bd1e1c5178"
+url = "https://github.com/kopia/kopia/releases/download/v0.23.1/kopia-0.23.1-linux-x64.tar.gz"
+url_api = "https://api.github.com/repos/kopia/kopia/releases/assets/448730944"
+
+[tools.kopia."platforms.macos-arm64"]
+checksum = "sha256:19e6ed637221f4dfd46a46e978ec4c509c386b522d746db2cd6762b217478111"
+url = "https://github.com/kopia/kopia/releases/download/v0.23.1/kopia-0.23.1-macOS-arm64.tar.gz"
+url_api = "https://api.github.com/repos/kopia/kopia/releases/assets/448730947"
+
+[tools.kopia."platforms.macos-x64"]
+checksum = "sha256:89dd7160a1266413c73bd0aa92459c5e739fcaed2ba30a4cca30aef179f11042"
+url = "https://github.com/kopia/kopia/releases/download/v0.23.1/kopia-0.23.1-macOS-x64.tar.gz"
+url_api = "https://api.github.com/repos/kopia/kopia/releases/assets/448730959"
+
+[tools.kopia."platforms.windows-x64"]
+checksum = "sha256:f0369d9657dbe47a1b8b6ff4e308c5958a4813b405d4e32ae9d81b3f2b3d8251"
+url = "https://github.com/kopia/kopia/releases/download/v0.23.1/kopia-0.23.1-windows-x64.zip"
+url_api = "https://api.github.com/repos/kopia/kopia/releases/assets/448730977"
+
 [[tools.lefthook]]
 version = "2.1.10"
 backend = "aqua:evilmartians/lefthook"
@@ -91,6 +130,38 @@ checksum = "sha256:beabbce824641ae71229ed11dd8634f47148921cb649d25c90441b7374814
 url = "https://github.com/evilmartians/lefthook/releases/download/v2.1.10/lefthook_2.1.10_Windows_x86_64.gz"
 url_api = "https://api.github.com/repos/evilmartians/lefthook/releases/assets/470227505"
 provenance = "github-attestations"
+
+[[tools.mkcert]]
+version = "1.4.4"
+backend = "aqua:FiloSottile/mkcert"
+
+[tools.mkcert."platforms.linux-arm64"]
+url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-arm64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709957"
+
+[tools.mkcert."platforms.linux-arm64-musl"]
+url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-arm64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709957"
+
+[tools.mkcert."platforms.linux-x64"]
+url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709955"
+
+[tools.mkcert."platforms.linux-x64-musl"]
+url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709955"
+
+[tools.mkcert."platforms.macos-arm64"]
+url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-darwin-arm64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709954"
+
+[tools.mkcert."platforms.macos-x64"]
+url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-darwin-amd64"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709952"
+
+[tools.mkcert."platforms.windows-x64"]
+url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-windows-amd64.exe"
+url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709958"
 
 [[tools."npm:@commitlint/cli"]]
 version = "21.2.1"

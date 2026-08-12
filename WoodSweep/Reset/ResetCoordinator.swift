@@ -70,9 +70,7 @@ final class ResetCoordinator {
 
         do {
             let configuration = try configurationLoader.load()
-            let targetAccount = try targetAccountResolver.resolve(
-                username: configuration.targetUsername
-            )
+            let targetAccount = try targetAccountResolver.resolve()
             let scope = try HomeScope(homeURL: targetAccount.homeURL)
             let context = try KopiaContext(
                 configuration: configuration,

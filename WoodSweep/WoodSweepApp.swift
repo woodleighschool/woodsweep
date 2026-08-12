@@ -7,9 +7,9 @@ enum WoodSweepMain {
     @MainActor
     static func main() async {
         var arguments = Array(CommandLine.arguments.dropFirst())
-        if arguments.first == "configure" {
+        if arguments.first == "bootstrap" {
             arguments.removeFirst()
-            let status = await ConfigurationCommand.live.run(
+            let status = await BootstrapCommand.live.run(
                 arguments: arguments
             )
             Darwin.exit(status)

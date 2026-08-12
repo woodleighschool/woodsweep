@@ -431,18 +431,8 @@ private final class CoordinatorFixture {
         )
         let scope = try HomeScope(homeURL: home)
         let configuration = AppConfiguration(
-            targetUsername: "sac",
-            repository: RepositorySettings(
-                endpoint: "s3.example.test",
-                bucket: "exam-backups",
-                region: "ap-southeast-2",
-                prefix: "sac/",
-                accessKeyID: "access"
-            ),
-            credentials: RepositoryCredentials(
-                secretAccessKey: "secret",
-                repositoryPassword: "password"
-            )
+            serverURL: "https://kopia.example.test:51515",
+            serverPassword: "machine-password"
         )
         officeApplications = FakeOfficeApplications(
             events: events,
@@ -536,7 +526,7 @@ private struct FakeTargetAccountResolver: TargetAccountResolving {
     let events: EventRecorder
     let targetAccount: TargetAccount
 
-    func resolve(username _: String) throws -> TargetAccount {
+    func resolve() throws -> TargetAccount {
         events.record(.resolveAccount)
         return targetAccount
     }

@@ -41,6 +41,7 @@ DerivedData/
 # Local mise overrides
 .mise.local.toml
 .mise.local.lock
+/.local/
 
 # Editor / IDE
 .vscode/

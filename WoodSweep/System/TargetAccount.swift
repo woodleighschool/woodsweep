@@ -8,7 +8,7 @@ nonisolated struct TargetAccount: Equatable, Sendable {
 }
 
 nonisolated protocol TargetAccountResolving: Sendable {
-    func resolve(username: String) throws -> TargetAccount
+    func resolve() throws -> TargetAccount
 }
 
 nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
@@ -21,31 +21,34 @@ nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
         var errorDescription: String? {
             switch self {
             case .accountUnavailable:
-                "The configured account is unavailable."
+                "The current account is unavailable."
             case .notEffectiveUser:
-                "The configured account is not the effective user."
+                "WoodSweep must run as a non-root login user."
             case .notConsoleUser:
-                "The configured account is not the active console user."
+                "The current account is not the active console user."
             case .homeUnavailable:
-                "The configured home directory is unavailable."
+                "The current home directory is unavailable."
             }
         }
     }
 
-    func resolve(username: String) throws -> TargetAccount {
-        guard username.isEmpty == false,
-              let accountHome = FileManager.default.homeDirectory(
-                  forUser: username
-              )
+    func resolve() throws -> TargetAccount {
+        guard let effectiveAccount = getpwuid(geteuid()),
+              let effectiveName = effectiveAccount.pointee.pw_name
         else {
             throw Error.accountUnavailable
         }
+        let username = String(cString: effectiveName)
 
-        guard let effectiveAccount = getpwuid(geteuid()),
-              let effectiveName = effectiveAccount.pointee.pw_name,
-              String(cString: effectiveName) == username
+        guard username != "root"
         else {
             throw Error.notEffectiveUser
+        }
+
+        guard let accountHome = FileManager.default.homeDirectory(
+            forUser: username
+        ) else {
+            throw Error.homeUnavailable
         }
 
         var userID: uid_t = 0
