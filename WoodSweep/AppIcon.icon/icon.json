@@ -1,37 +1,32 @@
 {
-  "fill" : {
-    "solid" : "srgb:0.12941,0.32157,0.25490,1.00000"
+  "fill": {
+    "solid": "srgb:0.12941,0.32157,0.25490,1.00000"
   },
-  "groups" : [
+  "groups": [
     {
-      "layers" : [
+      "layers": [
         {
-          "blend-mode" : "normal",
-          "fill" : "automatic",
-          "image-name" : "woodstar.svg",
-          "name" : "Icon",
-          "position" : {
-            "scale" : 0.68,
-            "translation-in-points" : [
-              100,
-              29
-            ]
+          "blend-mode": "normal",
+          "fill": "none",
+          "image-name": "woodsweep.svg",
+          "name": "WoodSweep",
+          "position": {
+            "scale": 0.68,
+            "translation-in-points": [42, 31]
           }
         }
       ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
       },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
+      "translucency": {
+        "enabled": true,
+        "value": 0.5
       }
     }
   ],
-  "supported-platforms" : {
-    "squares" : [
-      "macOS"
-    ]
+  "supported-platforms": {
+    "squares": ["macOS"]
   }
 }
