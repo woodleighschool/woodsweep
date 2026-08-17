@@ -8,13 +8,12 @@ oxfmt = "0.63.0"
 shellcheck = "0.11.0"
 mkcert = "1.4.4"
 kopia = "v0.23.1"
-"npm:@commitlint/cli" = "21.2.1"
+"npm:@commitlint/cli" = "21.2.2"
 
 [settings]
 experimental = true
 pin = true
 lockfile = true
-minimum_release_age = "12 hours"
 
 [tasks.format]
 description = "Format Swift code"
