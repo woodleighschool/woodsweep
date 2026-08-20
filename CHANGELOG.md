@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.0](https://github.com/woodleighschool/woodsweep/compare/0.1.4...0.2.0) (2026-08-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* use Kopia Repository Server
+
+### Features
+
+* use Kopia Repository Server ([963f7cd](https://github.com/woodleighschool/woodsweep/commit/963f7cdbc7b92779fa01c679879f2c0aa779a673))
+
+
+### Bug Fixes
+
+* **ci:** disable automatic mise installs ([46339d5](https://github.com/woodleighschool/woodsweep/commit/46339d58fde2be1b29c879a3c08bf6b0e599c5b1))
+* **ci:** switch to org-level secrets ([ca217e1](https://github.com/woodleighschool/woodsweep/commit/ca217e16c864bb3bb451b74b61e2152657ba97b9))
+* **icon:** rename file, tweak position ([aa54541](https://github.com/woodleighschool/woodsweep/commit/aa54541e48cc5c1c3e0250a9197edfec93c4a7c2))
+
 ## [0.1.4](https://github.com/woodleighschool/woodsweep/compare/0.1.3...0.1.4) (2026-07-28)
 
 
