@@ -12,53 +12,49 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  build:
-    name: Build macOS release
+  release:
+    name: macOS release
     runs-on: macos-26
-    permissions:
-      contents: write
     env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
       APP_NAME: WoodSweep
       PROJECT: WoodSweep.xcodeproj
       SCHEME: WoodSweep
+
     steps:
       - name: Checkout release
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
           persist-credentials: false
 
-      - name: Import Developer ID certificate
+      - name: Import Developer ID Application certificate
         uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
 
-      - name: Archive
+      - name: Archive app
         run: |
-          ARCHIVE_PATH="${RUNNER_TEMP}/WoodSweep.xcarchive"
           xcodebuild \
             -project "${PROJECT}" \
             -scheme "${SCHEME}" \
             -configuration Release \
             -destination "generic/platform=macOS" \
-            -archivePath "${ARCHIVE_PATH}" \
+            -archivePath "${RUNNER_TEMP}/${APP_NAME}.xcarchive" \
             DEVELOPMENT_TEAM="SMLKBTR495" \
             CODE_SIGN_STYLE="Manual" \
             CODE_SIGN_IDENTITY="Developer ID Application" \
-            clean archive
+            archive
 
-      - name: Export Developer ID app
+      - name: Export app
         run: |
-          ARCHIVE_PATH="${RUNNER_TEMP}/WoodSweep.xcarchive"
-          EXPORT_PATH="${RUNNER_TEMP}/export"
           xcodebuild \
             -exportArchive \
-            -archivePath "${ARCHIVE_PATH}" \
-            -exportPath "${EXPORT_PATH}" \
+            -archivePath "${RUNNER_TEMP}/${APP_NAME}.xcarchive" \
+            -exportPath "${RUNNER_TEMP}/export" \
             -exportOptionsPlist Config/ExportOptions.plist
 
       - name: Notarize app
@@ -67,17 +63,20 @@ jobs:
           APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
           APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
         run: |
-          EXPORT_PATH="${RUNNER_TEMP}/export"
+          set -euo pipefail
+
+          APP_PATH="${RUNNER_TEMP}/export/${APP_NAME}.app"
+          NOTARY_ARCHIVE="${RUNNER_TEMP}/${APP_NAME}-notary.zip"
           NOTARY_KEY_PATH="${RUNNER_TEMP}/AuthKey.p8"
-          APP_PATH="${EXPORT_PATH}/${APP_NAME}.app"
-          NOTARY_ZIP_PATH="${RUNNER_TEMP}/${APP_NAME}.zip"
-          trap 'rm -f "${NOTARY_ZIP_PATH}" "${NOTARY_KEY_PATH}"' EXIT
+
+          trap 'rm -f "${NOTARY_ARCHIVE}" "${NOTARY_KEY_PATH}"' EXIT
 
           printf '%s' "${APPLE_NOTARY_KEY_P8_BASE64}" | base64 -D > "${NOTARY_KEY_PATH}"
           chmod 600 "${NOTARY_KEY_PATH}"
-          ditto -c -k --keepParent "${APP_PATH}" "${NOTARY_ZIP_PATH}"
 
-          xcrun notarytool submit "${NOTARY_ZIP_PATH}" \
+          ditto -c -k --keepParent "${APP_PATH}" "${NOTARY_ARCHIVE}"
+
+          xcrun notarytool submit "${NOTARY_ARCHIVE}" \
             --key "${NOTARY_KEY_PATH}" \
             --key-id "${APPLE_NOTARY_KEY_ID}" \
             --issuer "${APPLE_NOTARY_ISSUER_ID}" \
@@ -87,23 +86,20 @@ jobs:
           xcrun stapler validate "${APP_PATH}"
 
       - name: Create ZIP
-        env:
-          VERSION: ${{ github.event.release.tag_name }}
         run: |
-          DIST_PATH="${GITHUB_WORKSPACE}/dist"
-          EXPORT_PATH="${RUNNER_TEMP}/export"
-          mkdir -p "${DIST_PATH}"
-          ditto -c -k --keepParent \
-            "${EXPORT_PATH}/${APP_NAME}.app" \
-            "${DIST_PATH}/${APP_NAME}-${VERSION}.zip"
+          VERSION="${RELEASE_TAG#v}"
 
-      - name: Upload ZIP
+          mkdir -p dist
+          ditto -c -k --keepParent \
+            "${RUNNER_TEMP}/export/${APP_NAME}.app" \
+            "dist/${APP_NAME}-${VERSION}.zip"
+
+      - name: Upload release asset
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          DIST_PATH="${GITHUB_WORKSPACE}/dist"
+          VERSION="${RELEASE_TAG#v}"
           gh release upload \
             "${RELEASE_TAG}" \
-            "${DIST_PATH}/${APP_NAME}-${RELEASE_TAG}.zip" \
+            "dist/${APP_NAME}-${VERSION}.zip" \
             --clobber
