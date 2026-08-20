@@ -34,8 +34,8 @@ jobs:
       - name: Import Developer ID certificate
         uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
         with:
-          p12-file-base64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
-          p12-password: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}
+          p12-password: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
 
       - name: Archive
         run: |
@@ -63,9 +63,9 @@ jobs:
 
       - name: Notarize app
         env:
-          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
-          NOTARY_KEY_BASE64: ${{ secrets.NOTARY_KEY_BASE64 }}
-          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
         run: |
           EXPORT_PATH="${RUNNER_TEMP}/export"
           NOTARY_KEY_PATH="${RUNNER_TEMP}/AuthKey.p8"
@@ -73,14 +73,14 @@ jobs:
           NOTARY_ZIP_PATH="${RUNNER_TEMP}/${APP_NAME}.zip"
           trap 'rm -f "${NOTARY_ZIP_PATH}" "${NOTARY_KEY_PATH}"' EXIT
 
-          printf '%s' "${NOTARY_KEY_BASE64}" | base64 -D > "${NOTARY_KEY_PATH}"
+          printf '%s' "${APPLE_NOTARY_KEY_P8_BASE64}" | base64 -D > "${NOTARY_KEY_PATH}"
           chmod 600 "${NOTARY_KEY_PATH}"
           ditto -c -k --keepParent "${APP_PATH}" "${NOTARY_ZIP_PATH}"
 
           xcrun notarytool submit "${NOTARY_ZIP_PATH}" \
             --key "${NOTARY_KEY_PATH}" \
-            --key-id "${NOTARY_KEY_ID}" \
-            --issuer "${NOTARY_ISSUER_ID}" \
+            --key-id "${APPLE_NOTARY_KEY_ID}" \
+            --issuer "${APPLE_NOTARY_ISSUER_ID}" \
             --wait
 
           xcrun stapler staple "${APP_PATH}"
