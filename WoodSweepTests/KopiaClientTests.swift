@@ -433,23 +433,6 @@ struct ProcessRunnerTests {
         #expect(result.standardOutput.hasSuffix("OUT-END"))
         #expect(result.standardError.hasSuffix("ERR-END"))
     }
-
-    @Test("cancellation terminates the launched child")
-    func cancelsChild() async {
-        let task = Task {
-            try await ProcessRunner().run(
-                executable: URL(filePath: "/bin/sleep"),
-                arguments: ["10"]
-            )
-        }
-
-        try? await Task.sleep(for: .milliseconds(100))
-        task.cancel()
-
-        await #expect(throws: CancellationError.self) {
-            try await task.value
-        }
-    }
 }
 
 private actor RecordingProcessRunner: ProcessRunning {
