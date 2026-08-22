@@ -50,8 +50,11 @@ At launch, the effective process user must be the active console user with a val
 Open `WoodSweep.xcodeproj` in Xcode, or use the repository tasks:
 
 ```bash
+mise run fmt-check
 mise run lint
 mise run test
+mise run build
+mise run workflow-lint
 ```
 
 A local Kopia server is available for development:

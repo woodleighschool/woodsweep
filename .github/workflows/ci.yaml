@@ -71,13 +71,22 @@ jobs:
         with:
           cache: false
           experimental: true
-          install_args: --locked periphery swiftformat shellcheck actionlint zizmor
+          install_args: --locked periphery swiftformat shellcheck
 
-      - name: Run non-test checks
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Check formatting
+        run: mise run fmt-check
+
+      - name: Run linters
         run: mise run lint
 
       - name: Run tests
         run: mise run test
+
+      - name: Build app
+        run: mise run build
 
   status:
     if: ${{ !cancelled() }}

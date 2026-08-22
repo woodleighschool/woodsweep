@@ -23,6 +23,16 @@ run = "swiftformat WoodSweep WoodSweepTests"
 description = "Check Swift formatting"
 run = "swiftformat WoodSweep WoodSweepTests --lint"
 
+[tasks.build]
+description = "Build the unsigned macOS app"
+run = """
+xcodebuild build \
+  -project WoodSweep.xcodeproj \
+  -scheme WoodSweep \
+  -destination 'generic/platform=macOS' \
+  CODE_SIGNING_ALLOWED=NO
+"""
+
 [tasks.periphery]
 description = "Build the app and reject unused Swift code"
 run = """
@@ -77,8 +87,8 @@ description = "Lint GitHub Actions workflows"
 run = ["actionlint", "zizmor --offline --no-ignores .github/workflows"]
 
 [tasks.lint]
-description = "Run all non-test repository checks"
-depends = ["fmt-check", "shell-lint", "workflow-lint", "periphery"]
+description = "Run app and repository linters"
+depends = ["shell-lint", "periphery"]
 
 [hooks]
 postinstall = "lefthook install"
