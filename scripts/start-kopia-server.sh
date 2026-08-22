@@ -6,7 +6,7 @@ project_root="$(pwd -P)"
 readonly project_root
 
 if [ ! -f "${project_root}/.mise/config.toml" ] || [ ! -d "${project_root}/WoodSweep.xcodeproj" ]; then
-    echo "start-kopia-server.sh must run from the WoodSweep repository root" >&2
+    echo "start-kopia-server.sh must run from the repository root" >&2
     exit 1
 fi
 

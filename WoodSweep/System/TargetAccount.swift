@@ -23,7 +23,7 @@ nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
             case .accountUnavailable:
                 "The current account is unavailable."
             case .notEffectiveUser:
-                "WoodSweep must run as a non-root login user."
+                "Run as a non-root login user."
             case .notConsoleUser:
                 "The current account is not the active console user."
             case .homeUnavailable:
