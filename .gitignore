@@ -1,44 +1,15 @@
-# Build and tool outputs
-/dist/
-/.local/
-.build/
-DerivedData/
-*.xcarchive
-*.pkg
+# Xcode
+xcuserdata/
 
-# Local Mise overrides
+# Local services
+/.local/
+
+# Local Mise
 .mise.local.toml
 .mise.local.lock
-
-# Editor and IDE
-.vscode/
-
-# Xcode and Swift Package Manager
-xcuserdata/
-*.xcuserstate
-*.xccheckout
-*.xcscmblueprint
-*.moved-aside
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
-timeline.xctimeline
-playground.xcworkspace
-Packages/
-Package.pins
-Package.resolved
-Carthage/Build/
 
 # macOS
 .DS_Store
 .AppleDouble
 .LSOverride
 ._*
-.Spotlight-V100
-.Trashes
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
