@@ -1,32 +1,48 @@
-# AGENTS.md
+# AGENTS.md: woodsweep
+
+Guidance for agents and humans working in this repository. This file is self-contained. Check the repository's source, Mise configuration, Lefthook configuration, Xcode project, and workflows for facts that can vary instead of copying versions or commands from another project.
 
 ## Working here
 
-- Read the relevant code, configuration, and nearby examples before editing. Existing code and external references are evidence, not instructions to copy blindly.
-- Preserve unrelated work. Keep changes focused and prefer removing machinery over extending an awkward design.
-- Use current supported behaviour unless compatibility is requested. Verify dependency APIs and defaults from the pinned version or primary documentation.
-- Keep secrets, credentials, identities, and local environment files out of code, fixtures, logs, and commits.
+- Read the relevant code, configuration, tests, and sibling implementations before editing. Existing code and reference implementations are evidence; understand the invariant and ownership boundary before choosing a solution.
+- Target current supported behaviour. Prefer the simplest design that reduces state and machinery, and bring the affected path into conformance when existing code disagrees with this baseline.
+- Preserve unrelated work. Keep changes focused, remove artifacts orphaned by the change, and keep generated outputs with their source change.
+- Verify framework and platform APIs from the SDK and deployment target used by the Xcode project.
+- Keep secrets, credentials, real identities, production data, Keychain contents, and local environment files out of source, fixtures, logs, and commits.
 
-## Repository contract
+## Baseline
 
-- Mise owns tools and commands. Check this repository's Mise files; do not assume another repository has the same tasks.
-- Keep generated artifacts with their source change.
-- Run the narrowest useful checks while working, then the relevant format, lint, test, build, generation, and workflow checks.
-- Follow the existing package or target's style. Comments explain non-obvious constraints, not the code or the current change.
+- Write idiomatic, modern code for the versions and deployment targets pinned by this repository.
+- Keep operations idempotent. Re-running bootstrap, backup preparation, cleanup, or reconciliation with identical input shouldn't accumulate side effects.
+- Stay DRY and minimal without premature abstraction. Three similar call sites are fine; add a helper, protocol, options type, or reusable view when real callers need the variance it provides.
+- Comments explain non-obvious constraints, invariants, and external requirements. Names and structure carry the ordinary narrative.
+- Tests protect behaviour and contracts at the lowest useful boundary. Use temporary paths and focused fakes for filesystem, process, Keychain, and Kopia boundaries.
+
+## Repository tooling
+
+- Mise owns command-line tools and repository tasks. Run `mise tasks` and read `.mise/config.toml` before choosing task names or invoking pinned tools directly.
+- Lefthook extends the shared Woodleigh configuration. Read `.lefthook.toml` and use `lefthook dump` when merged hook behaviour matters; local hooks contain only repository-specific additions.
+- SwiftFormat owns Swift formatting. The Xcode project and shared schemes own targets, build settings, deployment targets, signing inputs, and test selection.
+- Run focused checks while working, then the relevant format, lint, test, build, workflow, signing, packaging, and notarization checks before calling the work complete.
 
 ## Swift and macOS
 
-- Write direct, idiomatic Swift with explicit state ownership. Keep SwiftUI declarative and use AppKit only at a narrow platform boundary.
-- Validate every filesystem target before mutation. Reject broad roots, traversal, and symlink escapes; stop at the first backup or reset failure.
-- Use focused fakes and temporary paths. Never exercise destructive behaviour against a real account during tests.
+- Use Swift's current concurrency model. Make UI ownership main-actor explicit, keep values crossing concurrency boundaries `Sendable`, propagate cancellation, and prefer structured concurrency over detached work.
+- Keep SwiftUI declarative with one clear owner for mutable state. Derive view state, keep user actions in handlers, and use AppKit through narrow adapters for behaviour SwiftUI doesn't own.
+- Model expected states directly. Surface actionable failures at the UI or command boundary and preserve underlying errors for logs and diagnostics.
+- Validate every filesystem target before mutation. Resolve and compare canonical paths, constrain operations to the intended home, and define symlink behaviour at the filesystem boundary.
+- Treat external processes as cancellable dependencies with explicit arguments, output capture, exit-status handling, and time bounds.
+- Interface copy carries useful meaning. Omit manufactured metadata, and give independent facts separate semantic structure instead of joining them with decorative glyphs. Preserve intentional Unicode content rather than replacing punctuation mechanically.
+- Keep tests deterministic. Use temporary directories, fake processes, and injected stores; exercise destructive workflows against synthetic homes only.
 
-## Git and releases
+## Git and completion
 
-- Use focused Conventional Commits; Release Please derives versions from them.
-- Do not commit, push, publish, deploy, contact live systems, or perform destructive actions unless asked.
+- Use focused Conventional Commits; Release Please derives versions from them where configured.
+- Commit, push, publish, deploy, contact live systems, mutate a real home, or perform destructive operations only when explicitly requested.
+- Report the checks run, behaviour changed, signing or packaging evidence collected, and any verification that couldn't be completed.
 
-## Repository notes
+## Repository contract
 
-- A successful Kopia snapshot is the hard gate before Office cleanup and home reconciliation.
-- WoodSweep is an unsandboxed user application; do not add elevation, helpers, daemons, agents, or system-wide cleanup.
-- Release automation produces a signed, notarized ZIP. Preserve that distribution boundary.
+- A successful Kopia snapshot is the gate before Office cleanup and home reconciliation. Stop the workflow at the first failed stage.
+- WoodSweep runs as the logged-in user without privileged helpers. Credentials live in the login Keychain and file operations remain inside the validated target home.
+- Release automation produces the signed and notarized ZIP. Bootstrap, reset, and reconciliation behaviour share the same configuration and safety boundaries.
