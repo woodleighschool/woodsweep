@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.2.1](https://github.com/woodleighschool/woodsweep/compare/0.2.0...0.2.1) (2026-08-22)
+
+
+### Bug Fixes
+
+* **ui:** make failures terminal ([7039b0c](https://github.com/woodleighschool/woodsweep/commit/7039b0cfe36da05abe5eeb52bdc5519ffbf3bd46))
+
+
+### Documentation
+
+* align repository agent guidance ([f07106c](https://github.com/woodleighschool/woodsweep/commit/f07106c5d53415a1ba853b484f1e41bd705c486f))
+* clarify repository guidance ([ed67ee4](https://github.com/woodleighschool/woodsweep/commit/ed67ee40bdc909f8d2db57f6498e497640580933))
+
+
+### Tests
+
+* remove flaky process cancellation test ([b797e14](https://github.com/woodleighschool/woodsweep/commit/b797e142dab447cfb1ab4ea44b80c1aae566bb57))
+
+
+### Build System
+
+* share the macOS scheme ([946e0e8](https://github.com/woodleighschool/woodsweep/commit/946e0e862988049583bfe0fdd8d310b807494cc5))
+
+
+### Continuous Integration
+
+* add explicit app build checks ([40b81d9](https://github.com/woodleighschool/woodsweep/commit/40b81d9e93a03e5afae717ca442d735cf20af133))
+* **github-action:** Update action home-operations/.github/actions/workflow-lint (v1.0.2 → v1.0.3) ([#14](https://github.com/woodleighschool/woodsweep/issues/14)) ([7830fac](https://github.com/woodleighschool/woodsweep/commit/7830fac7dbd3e227e759aa9f97442f4416cf3e5f))
+* sync shared repository tooling ([ff67936](https://github.com/woodleighschool/woodsweep/commit/ff6793681b1da6a6069233120c26fd22cc97cfe5))
+* verify the released app ([63f804b](https://github.com/woodleighschool/woodsweep/commit/63f804bbc1404a430a9e52b9733403a95e9574e2))
+
+
+### Miscellaneous Chores
+
+* align ignore rules ([647e5ea](https://github.com/woodleighschool/woodsweep/commit/647e5eaf0938b13b040febd1e6ee4194146d26d9))
+* fix deployment target ([ea4554e](https://github.com/woodleighschool/woodsweep/commit/ea4554eb46cc2b925d6d12f4f6caec31896f3d2a))
+* **mise:** update tool lefthook (2.1.10 → 2.1.11) ([#15](https://github.com/woodleighschool/woodsweep/issues/15)) ([d77889c](https://github.com/woodleighschool/woodsweep/commit/d77889cf2b0c78f6d55f58e6343ef099bc075a96))
+* normalise icon ([25262c1](https://github.com/woodleighschool/woodsweep/commit/25262c1fa6327d0bac8b7ec8c3aab78ee1c27357))
+* **release-please:** sync configuration ([7f1abbb](https://github.com/woodleighschool/woodsweep/commit/7f1abbb571c4d212f4d50e9ee3d55a4637afd7a5))
+* remove redundant self-references ([f8edb30](https://github.com/woodleighschool/woodsweep/commit/f8edb30a18c9efee824280778562e7a5c03321c8))
+
 ## [0.2.0](https://github.com/woodleighschool/woodsweep/compare/0.1.4...0.2.0) (2026-08-20)
 
 
