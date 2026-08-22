@@ -50,7 +50,7 @@ struct RootView: View {
     @ViewBuilder
     private var stateContent: some View {
         switch coordinator.state {
-        case .checking, .backupUnavailable, .backingUp, .resetting:
+        case .checking, .backingUp, .resetting:
             EmptyView()
         case let .confirmation(username):
             Text(
@@ -94,15 +94,6 @@ struct RootView: View {
             switch coordinator.state {
             case .checking, .backingUp, .resetting:
                 EmptyView()
-            case .backupUnavailable:
-                Button("Retry") {
-                    Task {
-                        await coordinator.retry()
-                    }
-                }
-                Button("Quit") {
-                    quit()
-                }
             case .confirmation:
                 Button("Cancel") {
                     quit()
@@ -123,14 +114,7 @@ struct RootView: View {
                     }
                 }
                 .keyboardShortcut(.defaultAction)
-            case let .failed(failure):
-                if failure.canRetry {
-                    Button("Retry") {
-                        Task {
-                            await coordinator.retry()
-                        }
-                    }
-                }
+            case .failed:
                 Button("Quit") {
                     quit()
                 }
@@ -155,8 +139,6 @@ struct RootView: View {
         switch coordinator.state {
         case .checking:
             "Checking backup connection…"
-        case .backupUnavailable:
-            "Backup unavailable"
         case .confirmation:
             "Prepare this Mac"
         case .closingApps:
@@ -166,7 +148,7 @@ struct RootView: View {
         case let .resetting(operation):
             "\(operationName(operation))…"
         case let .failed(failure):
-            operationName(failure.operation)
+            failureTitle(failure.operation)
         case .restartRequired:
             "Restart required"
         }
@@ -176,8 +158,7 @@ struct RootView: View {
         switch coordinator.state {
         case .checking, .backingUp, .resetting:
             true
-        case .backupUnavailable,
-             .confirmation,
+        case .confirmation,
              .closingApps,
              .failed,
              .restartRequired:
@@ -187,7 +168,7 @@ struct RootView: View {
 
     private var symbolName: String {
         switch coordinator.state {
-        case .backupUnavailable, .failed:
+        case .failed:
             "exclamationmark.triangle"
         case .restartRequired:
             "arrow.clockwise.circle"
@@ -200,7 +181,7 @@ struct RootView: View {
 
     private var symbolStyle: AnyShapeStyle {
         switch coordinator.state {
-        case .backupUnavailable, .failed:
+        case .failed:
             AnyShapeStyle(.orange)
         case .checking,
              .confirmation,
@@ -228,6 +209,25 @@ struct RootView: View {
             "Clearing \(directory)"
         case let .removing(item):
             "Removing \(item)"
+        }
+    }
+
+    private func failureTitle(_ operation: ResetOperation) -> String {
+        switch operation {
+        case .checkingConnection:
+            "Backup unavailable"
+        case .backingUp:
+            "Backup failed"
+        case .resettingWord:
+            "Word reset failed"
+        case .resettingExcel:
+            "Excel reset failed"
+        case .resettingPowerPoint:
+            "PowerPoint reset failed"
+        case let .clearing(directory):
+            "Clearing \(directory) failed"
+        case let .removing(item):
+            "Removing \(item) failed"
         }
     }
 

@@ -11,12 +11,10 @@ nonisolated enum ResetOperation: Equatable, Sendable {
 nonisolated struct ResetFailure: Equatable, Sendable {
     let operation: ResetOperation
     let message: String
-    let canRetry: Bool
 }
 
 enum ResetState: Equatable, Sendable {
     case checking
-    case backupUnavailable(String)
     case confirmation(username: String)
     case closingApps([OfficeApplicationStatus])
     case backingUp

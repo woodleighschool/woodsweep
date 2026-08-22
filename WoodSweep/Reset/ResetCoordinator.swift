@@ -12,7 +12,6 @@ final class ResetCoordinator {
         case .backingUp, .resetting:
             false
         case .checking,
-             .backupUnavailable,
              .confirmation,
              .closingApps,
              .failed,
@@ -84,50 +83,7 @@ final class ResetCoordinator {
             Log.reset.info("Reset prerequisites are available")
             state = .confirmation(username: targetAccount.username)
         } catch {
-            Log.reset.error(
-                "Reset prerequisites are unavailable: \(error.localizedDescription, privacy: .private)"
-            )
-            state = .backupUnavailable(error.localizedDescription)
-        }
-    }
-
-    func retry() async {
-        switch state {
-        case .backupUnavailable:
-            state = .checking
-            await start()
-        case let .failed(failure)
-            where failure.operation == .backingUp
-            && failure.canRetry
-            && confirmed:
-            guard let context else {
-                preconditionFailure(
-                    "Confirmed backup retry requires a repository context"
-                )
-            }
-
-            snapshotSucceeded = false
-            state = .checking
-            do {
-                Log.reset.info("Preparing repository for backup retry")
-                try await kopia.prepare(context)
-            } catch {
-                fail(
-                    operation: .backingUp,
-                    error: error,
-                    canRetry: true
-                )
-                return
-            }
-            await continueAfterConfirmation()
-        case .checking,
-             .confirmation,
-             .closingApps,
-             .backingUp,
-             .resetting,
-             .failed,
-             .restartRequired:
-            return
+            fail(operation: .checkingConnection, error: error)
         }
     }
 
@@ -221,11 +177,7 @@ final class ResetCoordinator {
             snapshotSucceeded = true
             Log.reset.info("Backup completed")
         } catch {
-            fail(
-                operation: .backingUp,
-                error: error,
-                canRetry: true
-            )
+            fail(operation: .backingUp, error: error)
             return
         }
 
@@ -272,7 +224,7 @@ final class ResetCoordinator {
             try await officeResetter.reset(application, in: scope)
             return true
         } catch {
-            fail(operation: operation, error: error, canRetry: false)
+            fail(operation: operation, error: error)
             return false
         }
     }
@@ -299,11 +251,7 @@ final class ResetCoordinator {
                     "Home reconciliation must report progress before failing"
                 )
             }
-            fail(
-                operation: currentHomeOperation,
-                error: error,
-                canRetry: false
-            )
+            fail(operation: currentHomeOperation, error: error)
             self.currentHomeOperation = nil
             return false
         }
@@ -316,16 +264,14 @@ final class ResetCoordinator {
 
     private func fail(
         operation: ResetOperation,
-        error: any Swift.Error,
-        canRetry: Bool
+        error: any Swift.Error
     ) {
         Log.reset.error(
             "Reset failed at \(String(describing: operation), privacy: .private): \(error.localizedDescription, privacy: .private)"
         )
         state = .failed(ResetFailure(
             operation: operation,
-            message: error.localizedDescription,
-            canRetry: canRetry
+            message: error.localizedDescription
         ))
     }
 }

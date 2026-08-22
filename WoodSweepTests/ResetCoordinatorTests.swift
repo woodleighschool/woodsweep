@@ -5,6 +5,24 @@ import Testing
 @Suite("Reset coordinator")
 @MainActor
 struct ResetCoordinatorTests {
+    @Test("preflight failure reports its exact error and stops")
+    func preflightFailureIsTerminal() async throws {
+        let fixture = try CoordinatorFixture(
+            configurationFailure: .configuration
+        )
+
+        await fixture.coordinator.start()
+
+        #expect(await fixture.events.values == [.loadConfiguration])
+        #expect(
+            fixture.coordinator.state == .failed(ResetFailure(
+                operation: .checkingConnection,
+                message: TestError.configuration.localizedDescription
+            ))
+        )
+        #expect(fixture.coordinator.allowsTermination)
+    }
+
     @Test("snapshot failure prevents every reset operation")
     func snapshotFailureStopsCleanup() async throws {
         let fixture = try CoordinatorFixture(
@@ -22,12 +40,12 @@ struct ResetCoordinatorTests {
             .validateRepository,
             .snapshot,
         ])
-        guard case let .failed(failure) = fixture.coordinator.state else {
-            Issue.record("Expected a stage-local failure")
-            return
-        }
-        #expect(failure.operation == .backingUp)
-        #expect(failure.canRetry)
+        #expect(
+            fixture.coordinator.state == .failed(ResetFailure(
+                operation: .backingUp,
+                message: TestError.snapshot.localizedDescription
+            ))
+        )
         #expect(fixture.coordinator.allowsTermination)
     }
 
@@ -217,7 +235,7 @@ struct ResetCoordinatorTests {
             return
         }
         #expect(failure.operation == ResetOperation.reset(application))
-        #expect(failure.canRetry == false)
+        #expect(failure.message == TestError.office.localizedDescription)
     }
 
     @Test("first home error hard-stops with the current operation")
@@ -238,8 +256,7 @@ struct ResetCoordinatorTests {
         #expect(
             fixture.coordinator.state == .failed(ResetFailure(
                 operation: .removing("student.txt"),
-                message: TestError.home.localizedDescription,
-                canRetry: false
+                message: TestError.home.localizedDescription
             ))
         )
     }
@@ -272,39 +289,6 @@ struct ResetCoordinatorTests {
         await resetTask.value
         #expect(fixture.coordinator.state == .restartRequired)
         #expect(fixture.coordinator.allowsTermination)
-    }
-
-    @Test("backup retry preserves confirmation and repeats preparation")
-    func backupRetryDoesNotBypassConfirmation() async throws {
-        let fixture = try CoordinatorFixture(
-            snapshotResults: [
-                .failure(TestError.snapshot),
-                .success(()),
-            ],
-            officeStatusResults: [[], []]
-        )
-
-        await fixture.coordinator.start()
-        await fixture.coordinator.confirmReset()
-        await fixture.coordinator.retry()
-
-        #expect(fixture.coordinator.state == .restartRequired)
-        #expect(await fixture.events.values == [
-            .loadConfiguration,
-            .resolveAccount,
-            .prepareRepository,
-            .listRunningApplications,
-            .validateRepository,
-            .snapshot,
-            .prepareRepository,
-            .listRunningApplications,
-            .validateRepository,
-            .snapshot,
-            .resetWord,
-            .resetExcel,
-            .resetPowerPoint,
-            .reconcileHome,
-        ])
     }
 
     @Test("restart requests are ignored before restart required")
@@ -383,6 +367,7 @@ private func status(
 }
 
 private enum TestError: Swift.Error, Equatable, LocalizedError {
+    case configuration
     case snapshot
     case office
     case home
@@ -390,6 +375,8 @@ private enum TestError: Swift.Error, Equatable, LocalizedError {
 
     var errorDescription: String? {
         switch self {
+        case .configuration:
+            "Configuration failed."
         case .snapshot:
             "Snapshot failed."
         case .office:
@@ -413,6 +400,7 @@ private final class CoordinatorFixture {
 
     init(
         snapshotResults: [Result<Void, TestError>] = [.success(())],
+        configurationFailure: TestError? = nil,
         officeStatusResults: [[OfficeApplicationStatus]] = [[]],
         waitStatusChanges: [[OfficeApplicationStatus]] = [],
         officeFailure: OfficeApplication? = nil,
@@ -447,7 +435,8 @@ private final class CoordinatorFixture {
         coordinator = ResetCoordinator(
             configurationLoader: FakeConfigurationLoader(
                 events: events,
-                configuration: configuration
+                configuration: configuration,
+                failure: configurationFailure
             ),
             targetAccountResolver: FakeTargetAccountResolver(
                 events: events,
@@ -515,9 +504,13 @@ private final class Locked<Value>: @unchecked Sendable {
 private struct FakeConfigurationLoader: ConfigurationLoading {
     let events: EventRecorder
     let configuration: AppConfiguration
+    let failure: TestError?
 
     func load() throws -> AppConfiguration {
         events.record(.loadConfiguration)
+        if let failure {
+            throw failure
+        }
         return configuration
     }
 }
