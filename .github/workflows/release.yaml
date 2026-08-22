@@ -36,6 +36,14 @@ jobs:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
 
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Validate release version
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          grep -Fqx "MARKETING_VERSION = ${VERSION} // x-release-please-version" Config/Version.xcconfig
+
       - name: Archive app
         run: |
           xcodebuild \
@@ -84,6 +92,13 @@ jobs:
 
           xcrun stapler staple "${APP_PATH}"
           xcrun stapler validate "${APP_PATH}"
+
+      - name: Verify app
+        run: |
+          APP_PATH="${RUNNER_TEMP}/export/${APP_NAME}.app"
+
+          codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
+          spctl --assess --type execute --verbose=2 "${APP_PATH}"
 
       - name: Create ZIP
         run: |
