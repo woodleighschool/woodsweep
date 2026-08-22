@@ -6,14 +6,21 @@
     {
       "layers": [
         {
-          "blend-mode": "normal",
-          "fill": "none",
+          "fill-specializations": [
+            {
+              "value": {
+                "solid": "extended-gray:1.00000,1.00000"
+              }
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "extended-gray:1.00000,1.00000"
+              }
+            }
+          ],
           "image-name": "woodsweep.svg",
-          "name": "WoodSweep",
-          "position": {
-            "scale": 0.68,
-            "translation-in-points": [42, 31]
-          }
+          "name": "woodsweep"
         }
       ],
       "shadow": {
@@ -22,11 +29,11 @@
       },
       "translucency": {
         "enabled": true,
-        "value": 0.5
+        "value": 0.3
       }
     }
   ],
   "supported-platforms": {
-    "squares": ["macOS"]
+    "squares": "shared"
   }
 }
