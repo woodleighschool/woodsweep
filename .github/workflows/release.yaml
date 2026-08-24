@@ -83,6 +83,30 @@ jobs:
             -authenticationKeyID "${APPLE_API_KEY_ID}" \
             -authenticationKeyIssuerID "${APPLE_API_KEY_ISSUER_ID}"
 
+      - name: Verify Keychain signing
+        run: |
+          set -euo pipefail
+
+          APP_PATH="${RUNNER_TEMP}/export/${APP_NAME}.app"
+          ENTITLEMENTS_PATH="${RUNNER_TEMP}/${APP_NAME}-entitlements.plist"
+
+          test -f "${APP_PATH}/Contents/embedded.provisionprofile"
+          codesign -d --entitlements :- "${APP_PATH}" \
+            > "${ENTITLEMENTS_PATH}" 2>/dev/null
+
+          BUNDLE_IDENTIFIER="$(/usr/libexec/PlistBuddy \
+            -c 'Print :CFBundleIdentifier' "${APP_PATH}/Contents/Info.plist")"
+          TEAM_IDENTIFIER="$(/usr/libexec/PlistBuddy \
+            -c 'Print :com.apple.developer.team-identifier' "${ENTITLEMENTS_PATH}")"
+          APPLICATION_IDENTIFIER="$(/usr/libexec/PlistBuddy \
+            -c 'Print :com.apple.application-identifier' "${ENTITLEMENTS_PATH}")"
+          KEYCHAIN_ACCESS_GROUP="$(/usr/libexec/PlistBuddy \
+            -c 'Print :keychain-access-groups:0' "${ENTITLEMENTS_PATH}")"
+          EXPECTED_APPLICATION_IDENTIFIER="${TEAM_IDENTIFIER}.${BUNDLE_IDENTIFIER}"
+
+          test "${APPLICATION_IDENTIFIER}" = "${EXPECTED_APPLICATION_IDENTIFIER}"
+          test "${KEYCHAIN_ACCESS_GROUP}" = "${EXPECTED_APPLICATION_IDENTIFIER}"
+
       - name: Notarize app
         run: |
           set -euo pipefail
