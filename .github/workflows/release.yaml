@@ -23,6 +23,8 @@ jobs:
       APP_NAME: WoodSweep
       PROJECT: WoodSweep.xcodeproj
       SCHEME: WoodSweep
+      APPSTORE_API_KEY_ID: ${{ vars.APPSTORE_API_KEY_ID }}
+      APPSTORE_ISSUER_ID: ${{ vars.APPSTORE_ISSUER_ID }}
 
     steps:
       - name: Checkout release
@@ -33,8 +35,17 @@ jobs:
       - name: Import Developer ID Application certificate
         uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
         with:
-          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}
-          p12-password: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
+          p12-file-base64: ${{ secrets.APPSTORE_CERTIFICATES_FILE_BASE64 }}
+          p12-password: ${{ secrets.APPSTORE_CERTIFICATES_PASSWORD }}
+
+      - name: Download Developer ID provisioning profile
+        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
+        with:
+          bundle-id: au.edu.vic.woodleigh.WoodSweep
+          profile-type: MAC_APP_DIRECT
+          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
 
       - name: Show Xcode version
         run: xcodebuild -version
@@ -55,6 +66,7 @@ jobs:
             DEVELOPMENT_TEAM="SMLKBTR495" \
             CODE_SIGN_STYLE="Manual" \
             CODE_SIGN_IDENTITY="Developer ID Application" \
+            PROVISIONING_PROFILE_SPECIFIER="WoodSweep" \
             archive
 
       - name: Export app
@@ -67,9 +79,7 @@ jobs:
 
       - name: Notarize app
         env:
-          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
-          APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
-          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
         run: |
           set -euo pipefail
 
@@ -79,15 +89,15 @@ jobs:
 
           trap 'rm -f "${NOTARY_ARCHIVE}" "${NOTARY_KEY_PATH}"' EXIT
 
-          printf '%s' "${APPLE_NOTARY_KEY_P8_BASE64}" | base64 -D > "${NOTARY_KEY_PATH}"
+          printf '%s' "${APPSTORE_API_PRIVATE_KEY}" > "${NOTARY_KEY_PATH}"
           chmod 600 "${NOTARY_KEY_PATH}"
 
           ditto -c -k --keepParent "${APP_PATH}" "${NOTARY_ARCHIVE}"
 
           xcrun notarytool submit "${NOTARY_ARCHIVE}" \
             --key "${NOTARY_KEY_PATH}" \
-            --key-id "${APPLE_NOTARY_KEY_ID}" \
-            --issuer "${APPLE_NOTARY_ISSUER_ID}" \
+            --key-id "${APPSTORE_API_KEY_ID}" \
+            --issuer "${APPSTORE_ISSUER_ID}" \
             --wait
 
           xcrun stapler staple "${APP_PATH}"
