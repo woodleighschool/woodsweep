@@ -8,7 +8,7 @@ nonisolated protocol CredentialStoring: Sendable {
 
 nonisolated struct KeychainCredentialStore: CredentialStoring {
     private let keychain = SimpleKeychain(
-        service: "au.edu.vic.woodleigh.WoodSweep.credentials",
+        service: "au.edu.vic.woodleigh.WoodSweep",
         accessibility: .afterFirstUnlockThisDeviceOnly,
         attributes: [kSecUseDataProtectionKeychain as String: true]
     )
