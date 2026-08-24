@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/woodleighschool/woodsweep/compare/0.2.2...0.2.3) (2026-08-24)
+
+
+### Bug Fixes
+
+* provision the data protection keychain ([5b8dcd7](https://github.com/woodleighschool/woodsweep/commit/5b8dcd7bca84041ec08d9e08e3a2fe83d537e29c))
+
 ## [0.2.2](https://github.com/woodleighschool/woodsweep/compare/0.2.1...0.2.2) (2026-08-24)
 
 
