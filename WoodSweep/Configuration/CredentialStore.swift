@@ -30,7 +30,7 @@ nonisolated struct KeychainCredentialStore: CredentialStoring {
 
     func value(for key: CredentialKey) throws -> String? {
         var result: CFTypeRef?
-        var query = itemQuery(for: key)
+        var query = Self.itemQuery(for: key)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
 
@@ -58,16 +58,17 @@ nonisolated struct KeychainCredentialStore: CredentialStoring {
         ]
 
         let updateStatus = SecItemUpdate(
-            itemQuery(for: key) as CFDictionary,
+            Self.itemQuery(for: key) as CFDictionary,
             attributes as CFDictionary
         )
         switch updateStatus {
         case errSecSuccess:
             return
         case errSecItemNotFound:
-            var item = itemQuery(for: key)
-            item.merge(attributes) { _, new in new }
-            let addStatus = SecItemAdd(item as CFDictionary, nil)
+            let addStatus = SecItemAdd(
+                Self.addQuery(value, for: key) as CFDictionary,
+                nil
+            )
             guard addStatus == errSecSuccess else {
                 throw securityError(
                     status: addStatus,
@@ -82,12 +83,24 @@ nonisolated struct KeychainCredentialStore: CredentialStoring {
         }
     }
 
-    private func itemQuery(for key: CredentialKey) -> [String: Any] {
+    static func itemQuery(for key: CredentialKey) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.service,
+            kSecAttrService as String: service,
             kSecAttrAccount as String: key.rawValue,
+            kSecUseDataProtectionKeychain as String: true,
         ]
+    }
+
+    static func addQuery(
+        _ value: String,
+        for key: CredentialKey
+    ) -> [String: Any] {
+        var query = itemQuery(for: key)
+        query[kSecValueData as String] = Data(value.utf8)
+        query[kSecAttrAccessible as String] =
+            kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        return query
     }
 
     private func securityError(
