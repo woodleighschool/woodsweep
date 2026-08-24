@@ -76,7 +76,7 @@ jobs:
             -exportOptionsPlist Config/ExportOptions.plist
 
       - name: Notarize app
-        uses: woodleighschool/.github/actions/apple-notarize@5b1e5d6999134740090de4054eac9e09524f947d # apple-notarize-v1.0.0
+        uses: woodleighschool/.github/actions/apple-notarize@281efcf98c65e4baf6948bdb2b83eabd0dc4dce7 # apple-notarize-v1.0.0
         with:
           app-path: ${{ runner.temp }}/export/${{ env.APP_NAME }}.app
           issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
