@@ -1,3 +1,4 @@
+import Security
 import SimpleKeychain
 
 nonisolated protocol CredentialStoring: Sendable {
@@ -7,7 +8,9 @@ nonisolated protocol CredentialStoring: Sendable {
 
 nonisolated struct KeychainCredentialStore: CredentialStoring {
     private let keychain = SimpleKeychain(
-        service: "au.edu.vic.woodleigh.WoodSweep.credentials"
+        service: "au.edu.vic.woodleigh.WoodSweep.credentials",
+        accessibility: .afterFirstUnlockThisDeviceOnly,
+        attributes: [kSecUseDataProtectionKeychain as String: true]
     )
 
     func value(for key: CredentialKey) throws -> String? {
