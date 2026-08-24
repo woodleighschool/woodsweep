@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.2](https://github.com/woodleighschool/woodsweep/compare/0.2.1...0.2.2) (2026-08-24)
+
+
+### Bug Fixes
+
+* **ci:** pin released notarization action ([23d0187](https://github.com/woodleighschool/woodsweep/commit/23d0187938a7d84474aee4543bca17b534d25e10))
+* use bundle ID for Keychain service ([de8b449](https://github.com/woodleighschool/woodsweep/commit/de8b449b1856c3ba07630caff725e918c82d4e96))
+
+
+### Continuous Integration
+
+* use apple notarize v2 ([365ca81](https://github.com/woodleighschool/woodsweep/commit/365ca817e1d265c303598caf0cdf7d6874951665))
+* use shared notarization action ([9fb3218](https://github.com/woodleighschool/woodsweep/commit/9fb3218eb8fab49346e89b8355645dd8382a5e4d))
+
 ## [0.2.1](https://github.com/woodleighschool/woodsweep/compare/0.2.0...0.2.1) (2026-08-24)
 
 
