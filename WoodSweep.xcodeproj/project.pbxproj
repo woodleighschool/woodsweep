@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 100;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -25,14 +25,12 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		D20000042F00000000E650FC /* Embed Kopia */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 6;
+			dstSubfolder = Executables;
 			files = (
 				D20000032F00000000E650FC /* kopia in Embed Kopia */,
 			);
 			name = "Embed Kopia";
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -59,19 +57,15 @@
 /* Begin PBXFrameworksBuildPhase section */
 		41187B0C2FBEF48D00E650FC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				D30000012F00000000E650FC /* ArgumentParser in Frameworks */,
 				D40000012F00000000E650FC /* SimpleKeychain in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		D10000042F00000000E650FC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -127,8 +121,6 @@
 			);
 			buildRules = (
 			);
-			dependencies = (
-			);
 			fileSystemSynchronizedGroups = (
 				41187B112FBEF48D00E650FC /* WoodSweep */,
 			);
@@ -158,8 +150,6 @@
 				D10000032F00000000E650FC /* WoodSweepTests */,
 			);
 			name = WoodSweepTests;
-			packageProductDependencies = (
-			);
 			productName = WoodSweepTests;
 			productReference = D10000022F00000000E650FC /* WoodSweepTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -196,7 +186,7 @@
 				D30000032F00000000E650FC /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 				D40000032F00000000E650FC /* XCRemoteSwiftPackageReference "SimpleKeychain" */,
 			);
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 100;
 			productRefGroup = 41187B102FBEF48D00E650FC /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -210,26 +200,19 @@
 /* Begin PBXResourcesBuildPhase section */
 		41187B0D2FBEF48D00E650FC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		D100000A2F00000000E650FC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		D20000012F00000000E650FC /* Fetch Kopia */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
 			inputPaths = (
 				"$(SRCROOT)/scripts/fetch-kopia.sh",
 			);
@@ -238,26 +221,24 @@
 				"$(DERIVED_FILE_DIR)/Kopia/kopia",
 				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Kopia-LICENSE.txt",
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/scripts/fetch-kopia.sh\"\n";
+			shellScript = (
+				"\"${SRCROOT}/scripts/fetch-kopia.sh\"",
+				"",
+			);
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		41187B0B2FBEF48D00E650FC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		D10000092F00000000E650FC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -270,7 +251,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		41187B182FBEF48F00E650FC /* Debug */ = {
+		41187B182FBEF48F00E650FC /* Debug configuration for PBXProject "WoodSweep" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -336,7 +317,7 @@
 			};
 			name = Debug;
 		};
-		41187B192FBEF48F00E650FC /* Release */ = {
+		41187B192FBEF48F00E650FC /* Release configuration for PBXProject "WoodSweep" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -394,7 +375,7 @@
 			};
 			name = Release;
 		};
-		41187B1B2FBEF48F00E650FC /* Debug */ = {
+		41187B1B2FBEF48F00E650FC /* Debug configuration for PBXNativeTarget "WoodSweep" */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D10000012F00000000E650FC /* Version.xcconfig */;
 			buildSettings = {
@@ -432,7 +413,7 @@
 			};
 			name = Debug;
 		};
-		41187B1C2FBEF48F00E650FC /* Release */ = {
+		41187B1C2FBEF48F00E650FC /* Release configuration for PBXNativeTarget "WoodSweep" */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D10000012F00000000E650FC /* Version.xcconfig */;
 			buildSettings = {
@@ -470,7 +451,7 @@
 			};
 			name = Release;
 		};
-		D100000C2F00000000E650FC /* Debug */ = {
+		D100000C2F00000000E650FC /* Debug configuration for PBXNativeTarget "WoodSweepTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -486,7 +467,7 @@
 			};
 			name = Debug;
 		};
-		D100000D2F00000000E650FC /* Release */ = {
+		D100000D2F00000000E650FC /* Release configuration for PBXNativeTarget "WoodSweepTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -508,28 +489,25 @@
 		41187B0A2FBEF48D00E650FC /* Build configuration list for PBXProject "WoodSweep" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				41187B182FBEF48F00E650FC /* Debug */,
-				41187B192FBEF48F00E650FC /* Release */,
+				41187B182FBEF48F00E650FC /* Debug configuration for PBXProject "WoodSweep" */,
+				41187B192FBEF48F00E650FC /* Release configuration for PBXProject "WoodSweep" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		41187B1A2FBEF48F00E650FC /* Build configuration list for PBXNativeTarget "WoodSweep" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				41187B1B2FBEF48F00E650FC /* Debug */,
-				41187B1C2FBEF48F00E650FC /* Release */,
+				41187B1B2FBEF48F00E650FC /* Debug configuration for PBXNativeTarget "WoodSweep" */,
+				41187B1C2FBEF48F00E650FC /* Release configuration for PBXNativeTarget "WoodSweep" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		D10000082F00000000E650FC /* Build configuration list for PBXNativeTarget "WoodSweepTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D100000C2F00000000E650FC /* Debug */,
-				D100000D2F00000000E650FC /* Release */,
+				D100000C2F00000000E650FC /* Debug configuration for PBXNativeTarget "WoodSweepTests" */,
+				D100000D2F00000000E650FC /* Release configuration for PBXNativeTarget "WoodSweepTests" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
@@ -567,4 +545,5 @@
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 41187B072FBEF48D00E650FC /* Project object */;
+	validationLevel = 1;
 }
