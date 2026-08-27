@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.3](https://github.com/woodleighschool/woodsweep/compare/0.2.2...0.2.3) (2026-08-27)
+
+
+### Bug Fixes
+
+* **xcode:** xcode 26.3 min compatability ([228c77e](https://github.com/woodleighschool/woodsweep/commit/228c77e169d28a40137c817e1e6fc017618bb95a))
+
+
+### Documentation
+
+* clarify usage and releases ([b51682f](https://github.com/woodleighschool/woodsweep/commit/b51682fb843b4d4eee1de62d31b898441b8919af))
+
+
+### Miscellaneous Chores
+
+* **mise:** update tool oxfmt (0.64.0 → 0.65.0) ([#23](https://github.com/woodleighschool/woodsweep/issues/23)) ([7587500](https://github.com/woodleighschool/woodsweep/commit/7587500993cb26df900764d1c4d7ae13ec26ce1f))
+
 ## [0.2.2](https://github.com/woodleighschool/woodsweep/compare/0.2.1...0.2.2) (2026-08-24)
 
 
