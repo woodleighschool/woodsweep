@@ -1,10 +1,15 @@
 # woodsweep
 
+[![Release](https://img.shields.io/github/v/release/woodleighschool/woodsweep?display_name=tag&sort=semver)](https://github.com/woodleighschool/woodsweep/releases/latest)
+[![CI](https://github.com/woodleighschool/woodsweep/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/woodleighschool/woodsweep/actions/workflows/ci.yaml)
+![macOS 26+](https://img.shields.io/badge/macOS-26%2B-000000?logo=apple&logoColor=white)
+[![License](https://img.shields.io/github/license/woodleighschool/woodsweep)](https://github.com/woodleighschool/woodsweep/blob/main/LICENSE)
+
 Snapshots the current user’s home to a Kopia Repository Server, resets Word, Excel, and PowerPoint user state, then reconciles the home only after the snapshot succeeds.
 
 ## 🚀 Usage
 
-Download the signed and notarized ZIP from the [latest release](https://github.com/woodleighschool/woodsweep/releases/latest), move the app to `/Applications`, and deploy [`Config/WoodSweep.mobileconfig`](Config/WoodSweep.mobileconfig).
+Download the macOS app from the [latest release](https://github.com/woodleighschool/woodsweep/releases/latest), extract it, and move `WoodSweep.app` to `/Applications`.
 
 Bootstrap the logged-in user once:
 
@@ -19,7 +24,9 @@ Bootstrap creates a machine-specific Kopia user and stores only its generated pa
 
 ## ⚙️ Configuration
 
-The app requires a Kopia Repository Server with a system-trusted certificate and default ACLs enabled:
+The [PPPC profile](Config/WoodSweep.mobileconfig) grants Full Disk Access for the snapshot and lets WoodSweep open the macOS restart dialog when cleanup finishes.
+
+The app requires a Kopia Repository Server with a system-trusted certificate and default ACLs enabled. Create a bootstrap identity permitted to provision machine accounts:
 
 ```bash
 kopia server acl enable
@@ -33,7 +40,7 @@ kopia server acl add \
 
 The server control API must use the same bootstrap identity so the app can refresh Kopia’s user cache after provisioning a machine account.
 
-Repository policy owns retention, compression, maintenance, and exclusions. A typical global policy is:
+Apply the repository-wide policy used by WoodSweep:
 
 ```bash
 kopia policy set --global \
@@ -42,6 +49,8 @@ kopia policy set --global \
   --ignore-file-errors=true \
   --ignore-dir-errors=true
 ```
+
+`--ignore-file-errors` and `--ignore-dir-errors` are required because a normal macOS home contains paths the logged-in user cannot read. Repository policy also owns retention, compression, maintenance, and exclusions.
 
 At launch, the effective process user must be the active console user with a validated `/Users/<username>` home. Missing configuration, unsafe paths, unavailable backup, or missing credentials stops before cleanup.
 
