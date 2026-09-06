@@ -29,6 +29,9 @@ env:
 
 jobs:
   workflow-lint:
+    if: >-
+      ${{ !(startsWith(github.head_ref, 'release-please--')
+      && github.event.pull_request.head.repo.full_name == github.repository) }}
     name: Workflow Lint
     runs-on: ubuntu-24.04
     permissions:
@@ -57,6 +60,9 @@ jobs:
           zizmor-version: ${{ steps.tools.outputs.zizmor }}
 
   app:
+    if: >-
+      ${{ !(startsWith(github.head_ref, 'release-please--')
+      && github.event.pull_request.head.repo.full_name == github.repository) }}
     name: App
     runs-on: macos-26
     timeout-minutes: 30
