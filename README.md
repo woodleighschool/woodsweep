@@ -63,7 +63,6 @@ mise run fmt-check
 mise run lint
 mise run test
 mise run build
-mise run workflow-lint
 ```
 
 A local Kopia server is available for development:

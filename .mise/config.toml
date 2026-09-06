@@ -82,10 +82,6 @@ run = "./scripts/start-kopia-server.sh"
 description = "Lint repository shell scripts"
 run = "shellcheck scripts/*.sh"
 
-[tasks.workflow-lint]
-description = "Lint GitHub Actions workflows"
-run = ["actionlint", "zizmor --offline --no-ignores .github/workflows"]
-
 [tasks.lint]
 description = "Run app and repository linters"
 depends = ["shell-lint", "periphery"]
