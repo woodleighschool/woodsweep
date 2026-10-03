@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.2.4](https://github.com/woodleighschool/woodsweep/compare/0.2.3...0.2.4) (2026-10-03)
+
+
+### Continuous Integration
+
+* avoid redundant release metadata checks ([f4f9e23](https://github.com/woodleighschool/woodsweep/commit/f4f9e23c17df61719be248d51d7f86045b8cb9d7))
+* **github-action:** update action jdx/mise-action (v4.2.5 → v4.3.0) ([#25](https://github.com/woodleighschool/woodsweep/issues/25)) ([dbb4963](https://github.com/woodleighschool/woodsweep/commit/dbb4963557caee51932fb79557abc93956499250))
+* start renovate and release please runs in .github ([267227f](https://github.com/woodleighschool/woodsweep/commit/267227fc609f0d229bcf87717d62c3cd85cde5d6))
+
+
+### Miscellaneous Chores
+
+* align formatter ignores and rebuild tool locks ([22c6c2f](https://github.com/woodleighschool/woodsweep/commit/22c6c2fdb109092b1aa6dd34eae4c046a8354407))
+* fresh mise lock ([0093f41](https://github.com/woodleighschool/woodsweep/commit/0093f41ac94ab79de9902f99baef1a474169d2cc))
+* **github-action:** Update action home-operations/.github/actions/workflow-lint (v1.0.3 → v1.0.4) ([#34](https://github.com/woodleighschool/woodsweep/issues/34)) ([d1a5ac3](https://github.com/woodleighschool/woodsweep/commit/d1a5ac380e48d0aa571c8d692a336053deb750e7))
+* **github-action:** update action jdx/mise-action (v4.3.0 → v5.0.0) ([#42](https://github.com/woodleighschool/woodsweep/issues/42)) ([d0367ec](https://github.com/woodleighschool/woodsweep/commit/d0367ecd5cc9c85986c7ef57916bb079f3e77488))
+* **github-action:** update action ubuntu (24.04 → 26.04) ([#33](https://github.com/woodleighschool/woodsweep/issues/33)) ([0519ef0](https://github.com/woodleighschool/woodsweep/commit/0519ef0f764c0de4fd3785341755ca4dff5c6365))
+* **mise:** lock file maintenance tool (mise) ([#38](https://github.com/woodleighschool/woodsweep/issues/38)) ([3192ad2](https://github.com/woodleighschool/woodsweep/commit/3192ad2d3a3fe01ba3498b62bf6a6927a312a07c))
+* **mise:** lock file maintenance tool (mise) ([#39](https://github.com/woodleighschool/woodsweep/issues/39)) ([40241f8](https://github.com/woodleighschool/woodsweep/commit/40241f8041b3bc1d6a12dda1f677b895cb16ebc5))
+* **mise:** lock file maintenance tool (mise) ([#40](https://github.com/woodleighschool/woodsweep/issues/40)) ([4689643](https://github.com/woodleighschool/woodsweep/commit/46896431649797f8b60d7d1a48001c0be0b86c23))
+* **mise:** update mise tools ([#28](https://github.com/woodleighschool/woodsweep/issues/28)) ([17cb788](https://github.com/woodleighschool/woodsweep/commit/17cb7886ba0cb13d16de4db786d1e700de6a1cab))
+* **mise:** update tool lefthook (2.1.11 → 2.1.12) ([#27](https://github.com/woodleighschool/woodsweep/issues/27)) ([454f523](https://github.com/woodleighschool/woodsweep/commit/454f523c53f5264bea64988c4c89b1b9153129b5))
+* **mise:** update tool lefthook (2.1.12 → 2.1.14) ([#31](https://github.com/woodleighschool/woodsweep/issues/31)) ([25e94f5](https://github.com/woodleighschool/woodsweep/commit/25e94f512a7c2839b0f45a27ea4e09220f6e5cea))
+* **mise:** update tool lefthook (2.1.14 → 2.1.15) ([#43](https://github.com/woodleighschool/woodsweep/issues/43)) ([be15862](https://github.com/woodleighschool/woodsweep/commit/be158628a992a43a6161a6cae4e5b09b8920e8f5))
+* **mise:** update tool npm:@commitlint/cli (21.2.2 → 21.2.3) ([#35](https://github.com/woodleighschool/woodsweep/issues/35)) ([21051f7](https://github.com/woodleighschool/woodsweep/commit/21051f7640eee090797d0007f6327eaf44e8eead))
+* **mise:** update tool oxfmt (0.66.0 → 0.67.0) ([#29](https://github.com/woodleighschool/woodsweep/issues/29)) ([afdad60](https://github.com/woodleighschool/woodsweep/commit/afdad60051c164ef83f0f42614ed008617c43d87))
+* **mise:** update tool oxfmt (0.67.0 → 0.68.0) ([#32](https://github.com/woodleighschool/woodsweep/issues/32)) ([d887e1d](https://github.com/woodleighschool/woodsweep/commit/d887e1d082edd6f81f854f79164a791b704a9948))
+* **mise:** update tool oxfmt (0.68.0 → 0.69.0) ([#36](https://github.com/woodleighschool/woodsweep/issues/36)) ([d1e35cf](https://github.com/woodleighschool/woodsweep/commit/d1e35cf35bf6e00df26e8cdde04765ce440598f8))
+* **mise:** update tool oxfmt (0.69.0 → 0.70.0) ([#37](https://github.com/woodleighschool/woodsweep/issues/37)) ([bd6d4f6](https://github.com/woodleighschool/woodsweep/commit/bd6d4f6013748d399a50f4eadeef509dd0a32309))
+* **mise:** update tool oxfmt (0.70.0 → 0.71.0) ([#41](https://github.com/woodleighschool/woodsweep/issues/41)) ([4f52535](https://github.com/woodleighschool/woodsweep/commit/4f525359a82e9b79fd6e708e870524d7fcde7d54))
+* **mise:** update tool zizmor (1.30.0 → 1.30.1) ([#30](https://github.com/woodleighschool/woodsweep/issues/30)) ([b7bd59f](https://github.com/woodleighschool/woodsweep/commit/b7bd59fee8432d1f0dfbe3ae5c1c34a9937b7fe9))
+* remove redundant workflow lint task ([8fe0518](https://github.com/woodleighschool/woodsweep/commit/8fe0518096789a4549191bc1fab56dfa72732a93))
+
 ## [0.2.3](https://github.com/woodleighschool/woodsweep/compare/0.2.2...0.2.3) (2026-08-27)
 
 
