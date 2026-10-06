@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.3](https://github.com/woodleighschool/woodsweep/compare/0.2.2...0.2.3) (2026-08-27)
+## [0.2.3](https://github.com/woodleighschool/woodsweep/compare/v0.2.2...v0.2.3) (2026-08-27)
 
 
 ### Bug Fixes
@@ -17,7 +17,7 @@
 
 * **mise:** update tool oxfmt (0.64.0 → 0.65.0) ([#23](https://github.com/woodleighschool/woodsweep/issues/23)) ([7587500](https://github.com/woodleighschool/woodsweep/commit/7587500993cb26df900764d1c4d7ae13ec26ce1f))
 
-## [0.2.2](https://github.com/woodleighschool/woodsweep/compare/0.2.1...0.2.2) (2026-08-24)
+## [0.2.2](https://github.com/woodleighschool/woodsweep/compare/v0.2.1...v0.2.2) (2026-08-24)
 
 
 ### Bug Fixes
@@ -31,7 +31,7 @@
 * use apple notarize v2 ([365ca81](https://github.com/woodleighschool/woodsweep/commit/365ca817e1d265c303598caf0cdf7d6874951665))
 * use shared notarization action ([9fb3218](https://github.com/woodleighschool/woodsweep/commit/9fb3218eb8fab49346e89b8355645dd8382a5e4d))
 
-## [0.2.1](https://github.com/woodleighschool/woodsweep/compare/0.2.0...0.2.1) (2026-08-24)
+## [0.2.1](https://github.com/woodleighschool/woodsweep/compare/v0.2.0...v0.2.1) (2026-08-24)
 
 
 ### Bug Fixes
@@ -79,7 +79,7 @@
 * **release-please:** sync configuration ([7f1abbb](https://github.com/woodleighschool/woodsweep/commit/7f1abbb571c4d212f4d50e9ee3d55a4637afd7a5))
 * remove redundant self-references ([f8edb30](https://github.com/woodleighschool/woodsweep/commit/f8edb30a18c9efee824280778562e7a5c03321c8))
 
-## [0.2.0](https://github.com/woodleighschool/woodsweep/compare/0.1.4...0.2.0) (2026-08-20)
+## [0.2.0](https://github.com/woodleighschool/woodsweep/compare/v0.1.4...v0.2.0) (2026-08-20)
 
 
 ### ⚠ BREAKING CHANGES
@@ -97,28 +97,28 @@
 * **ci:** switch to org-level secrets ([ca217e1](https://github.com/woodleighschool/woodsweep/commit/ca217e16c864bb3bb451b74b61e2152657ba97b9))
 * **icon:** rename file, tweak position ([aa54541](https://github.com/woodleighschool/woodsweep/commit/aa54541e48cc5c1c3e0250a9197edfec93c4a7c2))
 
-## [0.1.4](https://github.com/woodleighschool/woodsweep/compare/0.1.3...0.1.4) (2026-07-28)
+## [0.1.4](https://github.com/woodleighschool/woodsweep/compare/v0.1.3...v0.1.4) (2026-07-28)
 
 
 ### Bug Fixes
 
 * **release:** distribute stapled app as ZIP ([29ab0f3](https://github.com/woodleighschool/woodsweep/commit/29ab0f3b02b67755381a5201e5a175548d91ffa5))
 
-## [0.1.3](https://github.com/woodleighschool/woodsweep/compare/0.1.2...0.1.3) (2026-07-28)
+## [0.1.3](https://github.com/woodleighschool/woodsweep/compare/v0.1.2...v0.1.3) (2026-07-28)
 
 
 ### Bug Fixes
 
 * **restart:** request macOS restart dialog ([edc3f23](https://github.com/woodleighschool/woodsweep/commit/edc3f2321259dc4b80245dcba82bd2186c0fe104))
 
-## [0.1.2](https://github.com/woodleighschool/woodsweep/compare/0.1.1...0.1.2) (2026-07-28)
+## [0.1.2](https://github.com/woodleighschool/woodsweep/compare/v0.1.1...v0.1.2) (2026-07-28)
 
 
 ### Bug Fixes
 
 * **release:** sign archives with Developer ID ([85d8cc3](https://github.com/woodleighschool/woodsweep/commit/85d8cc3c7259c81c9a7ed60ac6e4d5c0e0e88b11))
 
-## [0.1.1](https://github.com/woodleighschool/woodsweep/compare/0.1.0...0.1.1) (2026-07-28)
+## [0.1.1](https://github.com/woodleighschool/woodsweep/compare/0.1.0...v0.1.1) (2026-07-28)
 
 
 ### Features
