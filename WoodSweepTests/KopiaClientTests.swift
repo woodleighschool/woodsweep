@@ -413,6 +413,15 @@ struct KopiaClientTests {
 
 @Suite("Process runner")
 struct ProcessRunnerTests {
+    @Test("terminates a process that exceeds its deadline")
+    func boundsExecutionTime() async throws {
+        await #expect(throws: ProcessRunner.Error.self) {
+            try await ProcessRunner().run(
+                executable: URL(filePath: "/bin/sleep"), arguments: ["60"], timeout: .milliseconds(100)
+            )
+        }
+    }
+
     @Test("drains both streams concurrently and keeps only bounded tails")
     func boundsConcurrentOutput() async throws {
         let script = """
@@ -450,7 +459,8 @@ private actor RecordingProcessRunner: ProcessRunning {
 
     func run(
         executable: URL,
-        arguments: [String]
+        arguments: [String],
+        timeout _: Duration
     ) async throws -> ProcessResult {
         invocations.append(Invocation(
             executable: executable,

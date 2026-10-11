@@ -170,11 +170,14 @@ actor KopiaClient: KopiaServicing {
     enum Error: Swift.Error, Equatable, LocalizedError {
         case launchFailed(command: String, message: String)
         case commandFailed(command: String, status: Int32, message: String)
+        case timedOut(command: String)
 
         var errorDescription: String? {
             switch self {
             case let .launchFailed(command, message):
                 "Kopia \(command) could not start: \(message)"
+            case let .timedOut(command):
+                "Kopia \(command) exceeded its time limit."
             case let .commandFailed(command, status, message):
                 if message.isEmpty {
                     "Kopia \(command) exited with status \(status)."
@@ -430,15 +433,18 @@ actor KopiaClient: KopiaServicing {
             Log.kopia.info("Running \(command, privacy: .public)")
             result = try await processRunner.run(
                 executable: executable,
-                arguments: arguments
+                arguments: arguments,
+                timeout: command == "snapshot create" ? .seconds(3600) : .seconds(30)
             )
         } catch is CancellationError {
             throw CancellationError()
+        } catch ProcessRunner.Error.timedOut {
+            throw Error.timedOut(command: command)
         } catch {
-            Log.kopia.error("\(command, privacy: .public) could not start")
+            Log.kopia.error("\(command, privacy: .public) failed")
             throw Error.launchFailed(
                 command: command,
-                message: "The Kopia process could not start."
+                message: error.localizedDescription
             )
         }
 

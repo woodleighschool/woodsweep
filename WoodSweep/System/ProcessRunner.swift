@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 nonisolated struct ProcessResult: Equatable, Sendable {
@@ -9,17 +10,27 @@ nonisolated struct ProcessResult: Equatable, Sendable {
 nonisolated protocol ProcessRunning: Sendable {
     func run(
         executable: URL,
-        arguments: [String]
+        arguments: [String],
+        timeout: Duration
     ) async throws -> ProcessResult
 }
 
 nonisolated struct ProcessRunner: ProcessRunning {
+    enum Error: Swift.Error, LocalizedError {
+        case timedOut
+
+        var errorDescription: String? {
+            "The process exceeded its time limit."
+        }
+    }
+
     private static let captureLimit = 256 * 1024
     private static let readSize = 64 * 1024
 
     func run(
         executable: URL,
-        arguments: [String]
+        arguments: [String],
+        timeout: Duration = .seconds(30)
     ) async throws -> ProcessResult {
         let process = Process()
         let standardOutput = Pipe()
@@ -33,6 +44,23 @@ nonisolated struct ProcessRunner: ProcessRunning {
             try Task.checkCancellation()
             try process.run()
 
+            let timeoutTask = Task {
+                do {
+                    try await Task.sleep(for: timeout)
+                } catch {
+                    return false
+                }
+                if process.isRunning {
+                    process.terminate()
+                    try? await Task.sleep(for: .seconds(2))
+                    if Task.isCancelled == false, process.isRunning {
+                        kill(process.processIdentifier, SIGKILL)
+                    }
+                }
+                return true
+            }
+            defer { timeoutTask.cancel() }
+
             let outputTask = Task.detached {
                 try Self.drain(standardOutput.fileHandleForReading)
             }
@@ -45,13 +73,18 @@ nonisolated struct ProcessRunner: ProcessRunning {
             }
 
             if Task.isCancelled, process.isRunning {
-                process.terminate()
+                kill(process.processIdentifier, SIGKILL)
             }
 
             let terminationStatus = await terminationTask.value
+            timeoutTask.cancel()
+            let timedOut = await timeoutTask.value
             let output = try await outputTask.value
             let error = try await errorTask.value
             try Task.checkCancellation()
+            if timedOut {
+                throw Error.timedOut
+            }
 
             return ProcessResult(
                 terminationStatus: terminationStatus,
@@ -60,7 +93,7 @@ nonisolated struct ProcessRunner: ProcessRunning {
             )
         } onCancel: {
             if process.isRunning {
-                process.terminate()
+                kill(process.processIdentifier, SIGKILL)
             }
         }
     }
