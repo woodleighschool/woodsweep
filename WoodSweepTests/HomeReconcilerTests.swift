@@ -98,6 +98,21 @@ struct HomeReconcilerTests {
             )
         )
     }
+
+    @Test("runs off the main actor when the interface calls it")
+    @MainActor
+    func leavesMainActorFree() async throws {
+        let fixture = try HomeReconciliationFixture()
+        let recorder = MainThreadRecorder()
+
+        try await HomeReconciler().reconcile(fixture.scope) { _ in
+            await recorder.record(pthread_main_np() != 0)
+        }
+
+        let observations = await recorder.observations
+        #expect(observations.isEmpty == false)
+        #expect(observations.contains(true) == false)
+    }
 }
 
 private let standardDirectoryPermissions: [(name: String, permissions: Int)] = [
@@ -163,6 +178,14 @@ private actor OperationRecorder {
 
     func record(_ operation: HomeResetOperation) {
         values.append(operation)
+    }
+}
+
+private actor MainThreadRecorder {
+    private(set) var observations: [Bool] = []
+
+    func record(_ isMainThread: Bool) {
+        observations.append(isMainThread)
     }
 }
 

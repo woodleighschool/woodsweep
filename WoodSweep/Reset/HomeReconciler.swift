@@ -27,6 +27,8 @@ nonisolated struct HomeReconciler: HomeReconciling {
 
     private let preserved = Set(["Library", ".CFUserTextEncoding"])
 
+    /// Removal is blocking file I/O, so it runs off the caller's actor.
+    @concurrent
     func reconcile(
         _ scope: HomeScope,
         progress: @Sendable (HomeResetOperation) async -> Void

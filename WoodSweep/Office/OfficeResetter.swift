@@ -10,6 +10,8 @@ nonisolated protocol OfficeResetting: Sendable {
 }
 
 nonisolated struct OfficeResetter: OfficeResetting {
+    /// Removal is blocking file I/O, so it runs off the caller's actor.
+    @concurrent
     func reset(
         _ application: OfficeApplication,
         in scope: HomeScope
