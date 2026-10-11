@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.4](https://github.com/woodleighschool/woodsweep/compare/v0.2.3...v0.2.4) (2026-10-11)
+
+
+### Features
+
+* **bootstrap:** enroll machines through the system keychain ([476db20](https://github.com/woodleighschool/woodsweep/commit/476db20bdc41e3ca0cb3f7529d53326856f6241f))
+* **reset:** simplify the flow and restart automatically ([c366b00](https://github.com/woodleighschool/woodsweep/commit/c366b009bc18423ad6871646120a819a1413b042))
+
+
+### Bug Fixes
+
+* **process:** bound external command execution ([03d3c0e](https://github.com/woodleighschool/woodsweep/commit/03d3c0e93523ab2c44c37b3036bffa02794a5c82))
+* **reset:** keep cleanup off the main actor ([36ceb0a](https://github.com/woodleighschool/woodsweep/commit/36ceb0a665fab35c93c4c603bbcf23b66047174a))
+
 ## [0.2.3](https://github.com/woodleighschool/woodsweep/compare/v0.2.2...v0.2.3) (2026-08-27)
 
 
