@@ -1,22 +1,62 @@
 import Foundation
-import OSLog
 
-nonisolated enum DefaultsKey: String, CaseIterable {
-    case kopiaServerURL
-}
+nonisolated struct AppConfiguration: Codable, Equatable, Sendable {
+    enum Error: Swift.Error, Equatable, LocalizedError {
+        case invalidServerURL
+        case emptyPassword
+        case notBootstrapped
 
-nonisolated enum CredentialKey: String, CaseIterable {
-    case serverPassword
-}
+        var errorDescription: String? {
+            switch self {
+            case .invalidServerURL:
+                "The Kopia server must be an HTTPS URL with a valid port."
+            case .emptyPassword:
+                "The machine repository password is empty."
+            case .notBootstrapped:
+                "This Mac has not been configured. Run WoodSweep bootstrap as root."
+            }
+        }
+    }
 
-nonisolated struct AppConfiguration: Equatable, Sendable {
     let serverURL: String
     let serverPassword: String
-}
+    let hostname: String
 
-nonisolated protocol DefaultsStoring: Sendable {
-    func string(forKey key: String) -> String?
-    func set(_ value: String, forKey key: String)
+    init(serverURL: String, serverPassword: String, hostname: String) throws {
+        guard var components = URLComponents(string: serverURL.trimmingCharacters(in: .whitespacesAndNewlines)),
+              components.scheme?.lowercased() == "https",
+              components.host?.isEmpty == false,
+              components.user == nil,
+              components.password == nil,
+              components.query == nil,
+              components.fragment == nil,
+              components.path.isEmpty || components.path == "/",
+              (1 ... 65535).contains(components.port ?? 443)
+        else {
+            throw Error.invalidServerURL
+        }
+        components.scheme = "https"
+        components.port = components.port ?? 443
+        components.path = ""
+        guard let url = components.url else {
+            throw Error.invalidServerURL
+        }
+        guard serverPassword.isEmpty == false else {
+            throw Error.emptyPassword
+        }
+        self.serverURL = url.absoluteString
+        self.serverPassword = serverPassword
+        self.hostname = try KopiaHostname.normalized(hostname)
+    }
+
+    init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(
+            serverURL: values.decode(String.self, forKey: .serverURL),
+            serverPassword: values.decode(String.self, forKey: .serverPassword),
+            hostname: values.decode(String.self, forKey: .hostname)
+        )
+    }
 }
 
 nonisolated protocol ConfigurationLoading: Sendable {
@@ -24,82 +64,16 @@ nonisolated protocol ConfigurationLoading: Sendable {
 }
 
 nonisolated struct AppConfigurationStore: ConfigurationLoading {
-    enum Error: Swift.Error, Equatable, LocalizedError {
-        case missingValue(String)
-
-        var errorDescription: String? {
-            switch self {
-            case let .missingValue(key):
-                "Missing required configuration value: \(key)."
-            }
-        }
-    }
-
-    private let defaults: any DefaultsStoring
     private let credentials: any CredentialStoring
 
-    init(
-        defaults: any DefaultsStoring,
-        credentials: any CredentialStoring = KeychainCredentialStore()
-    ) {
-        self.defaults = defaults
+    init(credentials: any CredentialStoring = KeychainCredentialStore()) {
         self.credentials = credentials
     }
 
-    func apply(serverURL: String) throws -> String {
-        Log.configuration.info("Applying Kopia server URL")
-        defaults.set(serverURL, forKey: DefaultsKey.kopiaServerURL.rawValue)
-        return try requiredDefault(.kopiaServerURL)
-    }
-
-    func store(serverPassword: String) throws {
-        Log.configuration.info("Storing machine repository credential")
-        try credentials.set(serverPassword, for: .serverPassword)
-    }
-
     func load() throws -> AppConfiguration {
-        Log.configuration.info("Loading effective configuration")
-        return try AppConfiguration(
-            serverURL: requiredDefault(.kopiaServerURL),
-            serverPassword: requiredCredential(.serverPassword)
-        )
-    }
-
-    private func requiredDefault(_ key: DefaultsKey) throws -> String {
-        try requiredValue(
-            defaults.string(forKey: key.rawValue),
-            key: key.rawValue
-        )
-    }
-
-    private func requiredCredential(_ key: CredentialKey) throws -> String {
-        try requiredValue(
-            credentials.value(for: key),
-            key: key.rawValue
-        )
-    }
-
-    private func requiredValue(
-        _ value: String?,
-        key: String
-    ) throws -> String {
-        guard let value = normalized(value) else {
-            throw Error.missingValue(key)
+        guard let configuration = try credentials.load() else {
+            throw AppConfiguration.Error.notBootstrapped
         }
-        return value
-    }
-
-    private func normalized(_ value: String?) -> String? {
-        guard let value else {
-            return nil
-        }
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-}
-
-extension UserDefaults: DefaultsStoring {
-    nonisolated func set(_ value: String, forKey key: String) {
-        set(value as Any, forKey: key)
+        return configuration
     }
 }

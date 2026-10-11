@@ -36,15 +36,6 @@ jobs:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
 
-      - name: Download Developer ID provisioning profile
-        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
-        with:
-          bundle-id: au.edu.vic.woodleigh.WoodSweep
-          profile-type: MAC_APP_DIRECT
-          issuer-id: ${{ vars.APPSTORE_ISSUER_ID }}
-          api-key-id: ${{ vars.APPSTORE_API_KEY_ID }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-
       - name: Show Xcode version
         run: xcodebuild -version
 
@@ -64,7 +55,6 @@ jobs:
             DEVELOPMENT_TEAM="SMLKBTR495" \
             CODE_SIGN_STYLE="Manual" \
             CODE_SIGN_IDENTITY="Developer ID Application" \
-            PROVISIONING_PROFILE_SPECIFIER="WoodSweep" \
             archive
 
       - name: Export app

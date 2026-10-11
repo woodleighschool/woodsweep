@@ -4,11 +4,6 @@
 <dict>
     <key>method</key>
     <string>developer-id</string>
-    <key>provisioningProfiles</key>
-    <dict>
-        <key>au.edu.vic.woodleigh.WoodSweep</key>
-        <string>WoodSweep</string>
-    </dict>
     <key>signingStyle</key>
     <string>manual</string>
     <key>signingCertificate</key>

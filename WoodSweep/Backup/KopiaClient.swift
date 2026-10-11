@@ -69,14 +69,6 @@ nonisolated struct KopiaBootstrapCredentials: Equatable, Sendable {
 }
 
 nonisolated struct KopiaContext: Equatable, Sendable {
-    enum Error: Swift.Error, Equatable, LocalizedError {
-        case invalidServerURL
-
-        var errorDescription: String? {
-            "The Kopia server URL must be a valid HTTPS URL."
-        }
-    }
-
     static let username = "woodsweep"
 
     let serverURL: String
@@ -117,31 +109,15 @@ nonisolated struct KopiaContext: Equatable, Sendable {
         hostname: String,
         homeURL: URL
     ) throws {
-        let serverURL = serverURL.trimmingCharacters(
-            in: .whitespacesAndNewlines
+        let configuration = try AppConfiguration(
+            serverURL: serverURL,
+            serverPassword: serverPassword,
+            hostname: hostname
         )
-        guard var components = URLComponents(string: serverURL),
-              components.scheme?.lowercased() == "https",
-              components.host?.isEmpty == false,
-              components.user == nil,
-              components.password == nil,
-              components.query == nil,
-              components.fragment == nil
-        else {
-            throw Error.invalidServerURL
-        }
-        components.scheme = "https"
-        guard let normalizedServerURL = components.url?.absoluteString else {
-            throw Error.invalidServerURL
-        }
-
-        let normalizedHostname = try KopiaHostname.normalized(hostname)
         let scope = try HomeScope(homeURL: homeURL)
-        self.serverURL = normalizedServerURL.hasSuffix("/")
-            ? String(normalizedServerURL.dropLast())
-            : normalizedServerURL
-        self.serverPassword = serverPassword
-        self.hostname = normalizedHostname
+        self.serverURL = configuration.serverURL
+        self.serverPassword = configuration.serverPassword
+        self.hostname = configuration.hostname
         self.homeURL = scope.canonicalHomeURL
     }
 }
@@ -154,9 +130,36 @@ extension KopiaContext {
         try self.init(
             serverURL: configuration.serverURL,
             serverPassword: configuration.serverPassword,
-            hostname: KopiaHostname.current(),
+            hostname: configuration.hostname,
             homeURL: targetAccount.homeURL
         )
+    }
+
+    static func withTemporaryHome(
+        configuration: AppConfiguration,
+        operation: @Sendable (KopiaContext) async throws -> Void
+    ) async throws {
+        let directory = FileManager.default.temporaryDirectory.appending(
+            path: "WoodSweep-\(UUID().uuidString)", directoryHint: .isDirectory
+        )
+        try FileManager.default.createDirectory(
+            at: directory, withIntermediateDirectories: false,
+            attributes: [.posixPermissions: 0o700]
+        )
+        defer {
+            do {
+                try FileManager.default.removeItem(at: directory)
+            } catch {
+                Log.kopia.error("Unable to remove temporary repository state")
+            }
+        }
+        let context = try KopiaContext(
+            serverURL: configuration.serverURL,
+            serverPassword: configuration.serverPassword,
+            hostname: configuration.hostname,
+            homeURL: directory
+        )
+        try await operation(context)
     }
 }
 
@@ -214,6 +217,14 @@ actor KopiaClient: KopiaServicing {
         try Task.checkCancellation()
 
         let scope = try HomeScope(homeURL: context.homeURL)
+        do {
+            try await prepareUnlocked(context, scope: scope)
+            return
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            try Task.checkCancellation()
+        }
         try scope.removeItem(at: context.bootstrapDirectory)
         try scope.ensureDirectoryHierarchy(
             at: context.bootstrapDirectory,
@@ -255,7 +266,8 @@ actor KopiaClient: KopiaServicing {
             )
             try await refreshServer(
                 serverURL: context.serverURL,
-                credentials: credentials
+                credentials: credentials,
+                logDirectory: context.bootstrapDirectory
             )
         } catch {
             bootstrapError = error
@@ -284,6 +296,10 @@ actor KopiaClient: KopiaServicing {
         try Task.checkCancellation()
 
         let scope = try HomeScope(homeURL: context.homeURL)
+        try await prepareUnlocked(context, scope: scope)
+    }
+
+    private func prepareUnlocked(_ context: KopiaContext, scope: HomeScope) async throws {
         try prepareDirectories(context, scope: scope)
 
         let configData = try scope.dataIfRegularFile(at: context.configFile)
@@ -384,11 +400,13 @@ actor KopiaClient: KopiaServicing {
 
     private func refreshServer(
         serverURL: String,
-        credentials: KopiaBootstrapCredentials
+        credentials: KopiaBootstrapCredentials,
+        logDirectory: URL
     ) async throws {
         try await execute(
             command: "server refresh",
             arguments: [
+                "--log-dir", logDirectory.path,
                 "server", "refresh",
                 "--address", serverURL,
                 "--server-control-username", credentials.user.value,
@@ -500,6 +518,7 @@ actor KopiaClient: KopiaServicing {
             "--password", password,
             "--no-persist-credentials",
             "--no-progress",
+            "--log-dir", configFile.deletingLastPathComponent().path,
         ]
     }
 

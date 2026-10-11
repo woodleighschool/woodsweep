@@ -50,5 +50,5 @@ Guidance for agents and humans working in this repository. This file is self-con
 ## Repository contract
 
 - A successful Kopia snapshot is the gate before Office cleanup and home reconciliation. Stop the workflow at the first failed stage.
-- The app runs as the logged-in user without privileged helpers. Credentials live in the login Keychain and file operations remain inside the validated target home.
+- The app runs as the logged-in user without privileged helpers. Root bootstrap stores the machine configuration and credential in the System keychain before provisioning the server. Setup uses temporary state; reset file operations remain inside the validated target home.
 - Release automation produces the signed and notarized ZIP. Bootstrap, reset, and reconciliation behaviour share the same configuration and safety boundaries.

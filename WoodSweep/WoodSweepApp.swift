@@ -1,4 +1,5 @@
 import AppKit
+import ArgumentParser
 import Darwin
 import SwiftUI
 
@@ -6,13 +7,11 @@ import SwiftUI
 enum WoodSweepMain {
     @MainActor
     static func main() async {
-        var arguments = Array(CommandLine.arguments.dropFirst())
-        if arguments.first == "bootstrap" {
-            arguments.removeFirst()
-            let status = await BootstrapCommand.live.run(
-                arguments: arguments
-            )
-            Darwin.exit(status)
+        // Xcode launches hosted tests with AppKit arguments, not CLI arguments.
+        let isTestHost = NSClassFromString("XCTestCase") != nil
+        if CommandLine.arguments.count > 1, isTestHost == false {
+            await WoodSweepCLI.main()
+            return
         }
 
         WoodSweepApp.main()
@@ -26,12 +25,7 @@ struct WoodSweepApp: App {
     @State private var coordinator: ResetCoordinator
 
     init() {
-        let defaults = UserDefaults.standard
-        let credentials = KeychainCredentialStore()
-        let configuration = AppConfigurationStore(
-            defaults: defaults,
-            credentials: credentials
-        )
+        let configuration = AppConfigurationStore()
         let accountResolver = SystemTargetAccountResolver()
         let processRunner = ProcessRunner()
         let kopia = KopiaClient(

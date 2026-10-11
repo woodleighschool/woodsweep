@@ -104,134 +104,73 @@ struct KopiaClientTests {
         #expect(await runner.invocations.count == 2)
     }
 
-    @Test("bootstrap adds and immediately activates the machine user")
-    func bootstrapsNewMachineUser() async throws {
+    @Test("healthy bootstrap never changes the server or uses the bootstrap password")
+    func keepsHealthyEnrollment() async throws {
+        let fixture = try KopiaFixture()
+        let runner = RecordingProcessRunner(results: [.success, .status])
+        let client = KopiaClient(processRunner: runner, executableProvider: { fixture.executable })
+        try await client.bootstrap(credentials: fixture.bootstrapCredentials, context: fixture.context)
+        let calls = await runner.invocations
+        #expect(calls.count == 2)
+        #expect(calls.allSatisfy { !$0.arguments.contains("bootstrap-password") })
+        #expect(calls.allSatisfy { !$0.arguments.contains("--user-password") })
+    }
+
+    @Test("bootstrap repairs missing and mismatched server credentials", arguments: [false, true])
+    func repairsEnrollment(existing: Bool) async throws {
         let fixture = try KopiaFixture()
         let runner = RecordingProcessRunner(results: [
-            .success,
-            .users([]),
-            .success,
-            .success,
-            .success,
-            .status,
+            .denied, .success, .users(existing ? ["woodsweep@sc-sac-01"] : []),
+            .success, .success, .success, .status,
         ])
-        let client = KopiaClient(
-            processRunner: runner,
-            executableProvider: { fixture.executable }
-        )
-
-        try await client.bootstrap(
-            credentials: fixture.bootstrapCredentials,
-            context: fixture.context
-        )
-
-        let invocations = await runner.invocations
-        #expect(invocations.count == 6)
-        #expect(invocations[0].arguments == fixture.bootstrapBaseArguments + [
-            "repository", "connect", "server",
-            "--url", fixture.context.serverURL,
-            "--cache-directory",
-            fixture.bootstrapDirectory.appending(path: "cache").path,
-            "--no-check-for-updates",
-            "--override-username", "bootstrap",
-            "--override-hostname", "woodsweep",
-        ])
-        #expect(invocations[1].arguments == fixture.bootstrapBaseArguments + [
-            "server", "users", "list", "--json",
-        ])
-        #expect(invocations[2].arguments == fixture.bootstrapBaseArguments + [
-            "server", "users", "add", "woodsweep@sc-sac-01",
+        let client = KopiaClient(processRunner: runner, executableProvider: { fixture.executable })
+        try await client.bootstrap(credentials: fixture.bootstrapCredentials, context: fixture.context)
+        let calls = await runner.invocations
+        #expect(calls.count == 7)
+        #expect(calls[3].arguments == fixture.bootstrapBaseArguments + [
+            "server", "users", existing ? "set" : "add", "woodsweep@sc-sac-01",
             "--user-password", "machine-password",
         ])
-        #expect(invocations[3].arguments == [
-            "server", "refresh",
-            "--address", fixture.context.serverURL,
-            "--server-control-username", "bootstrap@woodsweep",
-            "--server-control-password", "bootstrap-password",
-        ])
-        #expect(invocations[4].arguments == fixture.baseArguments + [
-            "repository", "connect", "server",
-            "--url", fixture.context.serverURL,
-            "--cache-directory", fixture.cacheDirectory.path,
-            "--no-check-for-updates",
-            "--override-username", "woodsweep",
-            "--override-hostname", "sc-sac-01",
-        ])
-        #expect(invocations[5].arguments == fixture.baseArguments + [
-            "repository", "status", "--json",
-        ])
-        #expect(
-            FileManager.default.fileExists(
-                atPath: fixture.bootstrapDirectory.path
-            ) == false
-        )
+        #expect(calls[4].arguments.contains("refresh"))
+        #expect(calls[5].arguments.contains("machine-password"))
+        #expect(calls[6].arguments.suffix(3) == ["repository", "status", "--json"])
+        #expect(!FileManager.default.fileExists(atPath: fixture.bootstrapDirectory.path))
     }
 
-    @Test("bootstrap rotates an existing machine user's password")
-    func bootstrapsExistingMachineUser() async throws {
-        let fixture = try KopiaFixture()
-        try fixture.writeRepositoryConfig()
-        let runner = RecordingProcessRunner(results: [
-            .success,
-            .users(["woodsweep@sc-sac-01"]),
-            .success,
-            .success,
-            .success,
-            .status,
-        ])
-        let client = KopiaClient(
-            processRunner: runner,
-            executableProvider: { fixture.executable }
-        )
-
-        try await client.bootstrap(
-            credentials: fixture.bootstrapCredentials,
-            context: fixture.context
-        )
-
-        let invocations = await runner.invocations
-        #expect(invocations[2].arguments.contains("set"))
-        #expect(invocations[2].arguments.contains("add") == false)
-        #expect(
-            FileManager.default.fileExists(atPath: fixture.configFile.path)
-                == false
-        )
-    }
-
-    @Test("failed bootstrap removes transient state and never connects machine")
+    @Test("failed bootstrap removes transient admin state")
     func cleansUpFailedBootstrap() async throws {
         let fixture = try KopiaFixture()
-        let runner = RecordingProcessRunner(results: [
-            .success,
-            .users([]),
-            ProcessResult(
-                terminationStatus: 1,
-                standardOutput: "",
-                standardError: "access denied"
-            ),
-        ])
-        let client = KopiaClient(
-            processRunner: runner,
-            executableProvider: { fixture.executable }
-        )
-
+        let runner = RecordingProcessRunner(results: [.denied, .success, .users([]), .denied])
+        let client = KopiaClient(processRunner: runner, executableProvider: { fixture.executable })
         await #expect(throws: KopiaClient.Error.self) {
-            try await client.bootstrap(
-                credentials: fixture.bootstrapCredentials,
-                context: fixture.context
-            )
+            try await client.bootstrap(credentials: fixture.bootstrapCredentials, context: fixture.context)
         }
+        #expect(await runner.invocations.count == 4)
+        #expect(!FileManager.default.fileExists(atPath: fixture.bootstrapDirectory.path))
+    }
 
-        #expect(await runner.invocations.count == 3)
-        #expect(
-            FileManager.default.fileExists(
-                atPath: fixture.bootstrapDirectory.path
-            ) == false
+    @Test("machine diagnostics remove their temporary home after success and failure", arguments: [false, true])
+    func removesTemporaryState(fails: Bool) async throws {
+        let fixture = try KopiaFixture()
+        let configuration = try AppConfiguration(
+            serverURL: fixture.context.serverURL, serverPassword: "password", hostname: "original-name"
         )
-        #expect(
-            FileManager.default.fileExists(atPath: fixture.configFile.path)
-                == false
-        )
+        let recorder = TemporaryHomeRecorder()
+        do {
+            try await KopiaContext.withTemporaryHome(configuration: configuration) { context in
+                await recorder.record(context.homeURL)
+                #expect(context.hostname == "original-name")
+                #expect(FileManager.default.fileExists(atPath: context.homeURL.path))
+                if fails {
+                    throw CocoaError(.fileReadUnknown)
+                }
+            }
+            #expect(!fails)
+        } catch {
+            #expect(fails)
+        }
+        let home = try #require(await recorder.home)
+        #expect(!FileManager.default.fileExists(atPath: home.path))
     }
 
     @Test("preparation rejects a symlinked Kopia ancestor")
@@ -348,7 +287,7 @@ struct KopiaClientTests {
             "https://user@kopia.example.test:51515",
             "https://kopia.example.test:51515?fingerprint=abc",
         ] {
-            #expect(throws: KopiaContext.Error.invalidServerURL) {
+            #expect(throws: AppConfiguration.Error.invalidServerURL) {
                 try KopiaContext(
                     serverURL: serverURL,
                     serverPassword: "machine-password",
@@ -490,6 +429,7 @@ private final class KopiaFixture: @unchecked Sendable {
             "--password", "machine-password",
             "--no-persist-credentials",
             "--no-progress",
+            "--log-dir", configFile.deletingLastPathComponent().path,
         ]
     }
 
@@ -500,6 +440,7 @@ private final class KopiaFixture: @unchecked Sendable {
             "--password", "bootstrap-password",
             "--no-persist-credentials",
             "--no-progress",
+            "--log-dir", bootstrapDirectory.path,
         ]
     }
 
@@ -566,7 +507,15 @@ private final class KopiaFixture: @unchecked Sendable {
     }
 }
 
+private actor TemporaryHomeRecorder {
+    var home: URL?
+    func record(_ home: URL) {
+        self.home = home
+    }
+}
+
 private extension ProcessResult {
+    static let denied = ProcessResult(terminationStatus: 1, standardOutput: "", standardError: "access denied")
     static let success = ProcessResult(
         terminationStatus: 0,
         standardOutput: "",

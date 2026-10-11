@@ -11,16 +11,30 @@ Snapshots the current user’s home to a Kopia Repository Server, resets Word, E
 
 Download the macOS app from the [latest release](https://github.com/woodleighschool/woodsweep/releases/latest), extract it, and move `WoodSweep.app` to `/Applications`.
 
-Bootstrap the logged-in user once:
+Bootstrap the Mac as root, including before anyone logs in:
 
 ```bash
-/Applications/WoodSweep.app/Contents/MacOS/WoodSweep bootstrap \
+sudo /Applications/WoodSweep.app/Contents/MacOS/WoodSweep bootstrap \
   --server-url "https://kopia.example:51515" \
   --bootstrap-user "bootstrap@woodsweep" \
   --bootstrap-password "BOOTSTRAP_PASSWORD"
 ```
 
-Bootstrap creates a machine-specific Kopia user and stores only its generated password in the login Keychain. After that, open the app and confirm the reset.
+Bootstrap stores the server URL, machine identity, and generated password together in the System keychain, then provisions the Kopia user. The bootstrap credential is transient. Re-running bootstrap reuses the stored identity and password, including after an interrupted run or a hostname change. A working enrollment does not change the server.
+
+The System keychain trusts the app that creates the item through its code signature. Use the signed app for both bootstrap and normal operation, and keep its signing identity consistent across releases. This uses macOS's file-based keychain because enrollment must work outside a login session.
+
+Check enrollment and the repository connection without starting a reset:
+
+```bash
+/Applications/WoodSweep.app/Contents/MacOS/WoodSweep status
+```
+
+`status` works as root or as a user, reports the server and machine identity without printing credentials, and exits nonzero on failure. It checks repository access; it does not certify Full Disk Access or reset readiness for a particular home. Setup and status use temporary Kopia state, removed on exit. The app maintains its own repository connection settings inside the logged-in user's home.
+
+An MDM install hook can invoke bootstrap directly as root. No console user is required. Intune's post-install hook reports the app as installed even if bootstrap fails; use `status` to diagnose enrollment and rerun bootstrap to repair it.
+
+After setup, open the app and confirm the reset.
 
 ## ⚙️ Configuration
 

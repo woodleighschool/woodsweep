@@ -417,9 +417,10 @@ private final class CoordinatorFixture {
             withIntermediateDirectories: true
         )
         let scope = try HomeScope(homeURL: home)
-        let configuration = AppConfiguration(
+        let configuration = try AppConfiguration(
             serverURL: "https://kopia.example.test:51515",
-            serverPassword: "machine-password"
+            serverPassword: "machine-password",
+            hostname: "sc-sac-01"
         )
         officeApplications = FakeOfficeApplications(
             events: events,
