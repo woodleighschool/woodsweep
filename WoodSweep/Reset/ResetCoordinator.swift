@@ -14,8 +14,8 @@ final class ResetCoordinator {
         case .checking,
              .confirmation,
              .closingApps,
-             .failed,
-             .restartRequired:
+             .restarting,
+             .failed:
             true
         }
     }
@@ -127,21 +127,6 @@ final class ResetCoordinator {
         await performBackup()
     }
 
-    func requestRestart() throws {
-        guard state == .restartRequired else {
-            return
-        }
-
-        do {
-            try restartRequester.requestRestart()
-        } catch {
-            Log.reset.error(
-                "Restart request failed: \(error.localizedDescription, privacy: .private)"
-            )
-            throw error
-        }
-    }
-
     private func continueAfterConfirmation() async {
         guard confirmed else {
             preconditionFailure("Backup requires explicit confirmation")
@@ -207,7 +192,18 @@ final class ResetCoordinator {
         }
 
         Log.reset.info("Reset completed")
-        state = .restartRequired
+        restart()
+    }
+
+    private func restart() {
+        // Termination stays allowed here: loginwindow quits every app,
+        // including this one, to carry out the restart.
+        state = .restarting
+        do {
+            try restartRequester.requestRestart()
+        } catch {
+            fail(operation: .restarting, error: error)
+        }
     }
 
     private func reset(

@@ -47,18 +47,17 @@ struct ResetCoordinatorTests {
             ))
         )
         #expect(fixture.coordinator.allowsTermination)
+        #expect(fixture.restartRequester.requestCount == 0)
     }
 
-    @Test("successful cleanup is serial and ends at restart required")
+    @Test("successful cleanup is serial and ends by restarting")
     func successfulResetUsesExactOrder() async throws {
         let fixture = try CoordinatorFixture()
 
         await fixture.coordinator.start()
         await fixture.coordinator.confirmReset()
-        #expect(fixture.coordinator.state == .restartRequired)
 
-        try fixture.coordinator.requestRestart()
-
+        #expect(fixture.coordinator.state == .restarting)
         #expect(await fixture.events.values == [
             .loadConfiguration,
             .resolveAccount,
@@ -70,7 +69,7 @@ struct ResetCoordinatorTests {
             .resetExcel,
             .resetPowerPoint,
             .reconcileHome,
-            .restartRequired,
+            .restart,
         ])
         #expect(fixture.restartRequester.requestCount == 1)
     }
@@ -89,6 +88,7 @@ struct ResetCoordinatorTests {
         ])
         #expect(fixture.officeApplications.terminationRequestCount == 0)
         #expect(fixture.officeApplications.waitCount == 0)
+        #expect(fixture.restartRequester.requestCount == 0)
         #expect(fixture.coordinator.allowsTermination)
     }
 
@@ -167,7 +167,7 @@ struct ResetCoordinatorTests {
             waiting,
             [],
         ])
-        #expect(fixture.coordinator.state == .restartRequired)
+        #expect(fixture.coordinator.state == .restarting)
     }
 
     @Test("an application relaunched before snapshot returns to Close Apps")
@@ -236,6 +236,7 @@ struct ResetCoordinatorTests {
         }
         #expect(failure.operation == ResetOperation.reset(application))
         #expect(failure.message == TestError.office.localizedDescription)
+        #expect(fixture.restartRequester.requestCount == 0)
     }
 
     @Test("first home error hard-stops with the current operation")
@@ -259,6 +260,7 @@ struct ResetCoordinatorTests {
                 message: TestError.home.localizedDescription
             ))
         )
+        #expect(fixture.restartRequester.requestCount == 0)
     }
 
     @Test("termination is blocked only during backup and reset")
@@ -287,22 +289,11 @@ struct ResetCoordinatorTests {
 
         await resetGate.open()
         await resetTask.value
-        #expect(fixture.coordinator.state == .restartRequired)
+        #expect(fixture.coordinator.state == .restarting)
         #expect(fixture.coordinator.allowsTermination)
     }
 
-    @Test("restart requests are ignored before restart required")
-    func restartRequiresCompletedReset() async throws {
-        let fixture = try CoordinatorFixture()
-
-        await fixture.coordinator.start()
-        try fixture.coordinator.requestRestart()
-
-        #expect(fixture.restartRequester.requestCount == 0)
-        #expect(await fixture.events.values.contains(.restartRequired) == false)
-    }
-
-    @Test("restart request failures reach the presentation")
+    @Test("a failed restart request is reported after the reset")
     func restartFailureIsReported() async throws {
         let fixture = try CoordinatorFixture(
             restartFailure: .restart
@@ -311,9 +302,17 @@ struct ResetCoordinatorTests {
         await fixture.coordinator.start()
         await fixture.coordinator.confirmReset()
 
-        #expect(throws: TestError.restart) {
-            try fixture.coordinator.requestRestart()
-        }
+        #expect(await fixture.events.values.suffix(2) == [
+            .reconcileHome,
+            .restart,
+        ])
+        #expect(
+            fixture.coordinator.state == .failed(ResetFailure(
+                operation: .restarting,
+                message: TestError.restart.localizedDescription
+            ))
+        )
+        #expect(fixture.coordinator.allowsTermination)
     }
 }
 
@@ -328,7 +327,7 @@ private enum CoordinatorEvent: Equatable, Sendable {
     case resetExcel
     case resetPowerPoint
     case reconcileHome
-    case restartRequired
+    case restart
 
     static func reset(_ application: OfficeApplication) -> Self {
         switch application {
@@ -682,7 +681,7 @@ private final class FakeRestartRequester:
 
     func requestRestart() throws {
         count.withValue { $0 += 1 }
-        events.record(.restartRequired)
+        events.record(.restart)
         if let failure {
             throw failure
         }

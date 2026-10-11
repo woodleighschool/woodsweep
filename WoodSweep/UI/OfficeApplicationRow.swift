@@ -5,11 +5,11 @@ struct OfficeApplicationRow: View {
     let status: OfficeApplicationStatus
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             Image(nsImage: icon)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 32, height: 32)
+                .frame(width: 20, height: 20)
 
             Text(status.application.displayName)
 

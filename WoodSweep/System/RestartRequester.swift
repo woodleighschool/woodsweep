@@ -12,19 +12,12 @@ nonisolated struct RestartRequester: RestartRequesting {
         )
         let event = NSAppleEventDescriptor(
             eventClass: AEEventClass(kCoreEventClass),
-            eventID: AEEventID(kAEShowRestartDialog),
+            eventID: AEEventID(kAERestart),
             targetDescriptor: target,
             returnID: AEReturnID(kAutoGenerateReturnID),
             transactionID: AETransactionID(kAnyTransactionID)
         )
 
-        _ = try event.sendEvent(
-            options: [
-                .noReply,
-                .alwaysInteract,
-                .canSwitchLayer,
-            ],
-            timeout: 0
-        )
+        _ = try event.sendEvent(options: .noReply, timeout: 0)
     }
 }

@@ -6,6 +6,7 @@ nonisolated enum ResetOperation: Equatable, Sendable {
     case resettingPowerPoint
     case clearing(String)
     case removing(String)
+    case restarting
 }
 
 nonisolated struct ResetFailure: Equatable, Sendable {
@@ -19,6 +20,6 @@ enum ResetState: Equatable, Sendable {
     case closingApps([OfficeApplicationStatus])
     case backingUp
     case resetting(ResetOperation)
+    case restarting
     case failed(ResetFailure)
-    case restartRequired
 }

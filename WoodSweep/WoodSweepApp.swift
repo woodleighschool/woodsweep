@@ -62,13 +62,9 @@ struct WoodSweepApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        Window("WoodSweep", id: "main") {
             RootView(coordinator: coordinator)
         }
-        .defaultSize(width: 488, height: 280)
         .windowResizability(.contentSize)
-        .commands {
-            CommandGroup(replacing: .newItem) {}
-        }
     }
 }

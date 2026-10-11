@@ -24,7 +24,7 @@ Bootstrap creates a machine-specific Kopia user and stores only its generated pa
 
 ## ⚙️ Configuration
 
-The [PPPC profile](Config/WoodSweep.mobileconfig) grants Full Disk Access for the snapshot and lets WoodSweep open the macOS restart dialog when cleanup finishes.
+The [PPPC profile](Config/WoodSweep.mobileconfig) grants Full Disk Access for the snapshot and lets the app restart the Mac when the reset finishes.
 
 The app requires a Kopia Repository Server with a system-trusted certificate and default ACLs enabled. Create a bootstrap identity permitted to provision machine accounts:
 
