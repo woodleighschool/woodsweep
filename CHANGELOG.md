@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/woodleighschool/woodsweep/compare/v0.2.4...v0.2.5) (2026-10-12)
+
+
+### Bug Fixes
+
+* **process:** avoid blocking cooperative workers ([a01e5dd](https://github.com/woodleighschool/woodsweep/commit/a01e5dda439af2ac3afec77b2f08063073610bac))
+
 ## [0.2.4](https://github.com/woodleighschool/woodsweep/compare/v0.2.3...v0.2.4) (2026-10-11)
 
 
