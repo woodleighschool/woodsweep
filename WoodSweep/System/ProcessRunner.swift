@@ -50,37 +50,36 @@ nonisolated struct ProcessRunner: ProcessRunning {
                 } catch {
                     return false
                 }
-                if process.isRunning {
-                    process.terminate()
-                    try? await Task.sleep(for: .seconds(2))
-                    if Task.isCancelled == false, process.isRunning {
-                        kill(process.processIdentifier, SIGKILL)
-                    }
+                guard process.isRunning else {
+                    return false
+                }
+                process.terminate()
+                try? await Task.sleep(for: .seconds(2))
+                if Task.isCancelled == false, process.isRunning {
+                    kill(process.processIdentifier, SIGKILL)
                 }
                 return true
             }
             defer { timeoutTask.cancel() }
 
-            let outputTask = Task.detached {
+            async let output = Self.blocking {
                 try Self.drain(standardOutput.fileHandleForReading)
             }
-            let errorTask = Task.detached {
+            async let error = Self.blocking {
                 try Self.drain(standardError.fileHandleForReading)
-            }
-            let terminationTask = Task.detached {
-                process.waitUntilExit()
-                return process.terminationStatus
             }
 
             if Task.isCancelled, process.isRunning {
                 kill(process.processIdentifier, SIGKILL)
             }
 
-            let terminationStatus = await terminationTask.value
+            let terminationStatus = try await Self.blocking {
+                process.waitUntilExit()
+                return process.terminationStatus
+            }
             timeoutTask.cancel()
             let timedOut = await timeoutTask.value
-            let output = try await outputTask.value
-            let error = try await errorTask.value
+            let (standardOutput, standardError) = try await (output, error)
             try Task.checkCancellation()
             if timedOut {
                 throw Error.timedOut
@@ -88,12 +87,23 @@ nonisolated struct ProcessRunner: ProcessRunning {
 
             return ProcessResult(
                 terminationStatus: terminationStatus,
-                standardOutput: String(decoding: output, as: UTF8.self),
-                standardError: String(decoding: error, as: UTF8.self)
+                standardOutput: String(decoding: standardOutput, as: UTF8.self),
+                standardError: String(decoding: standardError, as: UTF8.self)
             )
         } onCancel: {
             if process.isRunning {
                 kill(process.processIdentifier, SIGKILL)
+            }
+        }
+    }
+
+    /// Pipe reads and process waits must not occupy Swift's cooperative worker threads.
+    private static func blocking<Value: Sendable>(
+        _ operation: @escaping @Sendable () throws -> Value
+    ) async throws -> Value {
+        try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .utility).async {
+                continuation.resume(with: Result(catching: operation))
             }
         }
     }

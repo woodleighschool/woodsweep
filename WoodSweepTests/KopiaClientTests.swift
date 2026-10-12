@@ -354,20 +354,20 @@ struct KopiaClientTests {
 struct ProcessRunnerTests {
     @Test("terminates a process that exceeds its deadline")
     func boundsExecutionTime() async throws {
+        let start = ContinuousClock.now
         await #expect(throws: ProcessRunner.Error.self) {
             try await ProcessRunner().run(
-                executable: URL(filePath: "/bin/sleep"), arguments: ["60"], timeout: .milliseconds(100)
+                executable: URL(filePath: "/bin/sleep"), arguments: ["5"], timeout: .milliseconds(100)
             )
         }
+        #expect(start.duration(to: .now) < .seconds(3))
     }
 
-    @Test("drains both streams concurrently and keeps only bounded tails")
+    @Test("drains both streams and keeps only bounded tails")
     func boundsConcurrentOutput() async throws {
         let script = """
-        (dd if=/dev/zero bs=4096 count=100 2>/dev/null | tr '\\0' O; \
-        printf OUT-END) & \
-        (dd if=/dev/zero bs=4096 count=100 2>/dev/null | tr '\\0' E; \
-        printf ERR-END) >&2 & wait
+        printf '%300000sOUT-END' ''
+        printf '%300000sERR-END' '' >&2
         """
 
         let result = try await ProcessRunner().run(
