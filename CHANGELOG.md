@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6](https://github.com/woodleighschool/woodsweep/compare/v0.2.5...v0.2.6) (2026-10-13)
+
+
+### Bug Fixes
+
+* **app:** prevent relaunch after login ([dc3700f](https://github.com/woodleighschool/woodsweep/commit/dc3700f31227ff971fda482c8fcaaff1ca06c172))
+
 ## [0.2.5](https://github.com/woodleighschool/woodsweep/compare/v0.2.4...v0.2.5) (2026-10-12)
 
 
