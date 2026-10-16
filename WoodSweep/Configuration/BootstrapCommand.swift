@@ -19,7 +19,7 @@ nonisolated struct BootstrapCommand: Sendable {
 
     let credentials: any CredentialStoring
     let isRoot: @Sendable () -> Bool
-    let hostname: @Sendable () throws -> String
+    let generateDeviceID: @Sendable () -> UUID
     let generatePassword: @Sendable () throws -> String
     let bootstrapRepository: @Sendable (KopiaBootstrapCredentials, AppConfiguration) async throws -> Void
 
@@ -31,7 +31,7 @@ nonisolated struct BootstrapCommand: Sendable {
         let configuration = try AppConfiguration(
             serverURL: arguments.serverURL,
             serverPassword: stored?.serverPassword ?? generatePassword(),
-            hostname: stored?.hostname ?? hostname()
+            deviceID: stored?.deviceID ?? generateDeviceID()
         )
         // Save before changing the server so a failed enrollment can reuse the same credential.
         if configuration != stored {
@@ -54,7 +54,7 @@ extension BootstrapCommand {
         return BootstrapCommand(
             credentials: KeychainCredentialStore(),
             isRoot: { geteuid() == 0 },
-            hostname: { try KopiaHostname.current() },
+            generateDeviceID: { UUID() },
             generatePassword: generateMachinePassword,
             bootstrapRepository: { credentials, configuration in
                 try await KopiaContext.withTemporaryHome(configuration: configuration) { context in

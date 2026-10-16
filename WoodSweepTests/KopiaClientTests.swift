@@ -25,8 +25,8 @@ struct KopiaClientTests {
             "--url", "https://kopia.example.test:51515",
             "--cache-directory", fixture.cacheDirectory.path,
             "--no-check-for-updates",
-            "--override-username", "woodsweep",
-            "--override-hostname", "sc-sac-01",
+            "--override-username", fixture.context.user.username,
+            "--override-hostname", "woodsweep",
         ])
         #expect(invocations[1].arguments == fixture.baseArguments + [
             "repository", "status", "--json",
@@ -120,7 +120,7 @@ struct KopiaClientTests {
     func repairsEnrollment(existing: Bool) async throws {
         let fixture = try KopiaFixture()
         let runner = RecordingProcessRunner(results: [
-            .denied, .success, .users(existing ? ["woodsweep@sc-sac-01"] : []),
+            .denied, .success, .users(existing ? [fixture.context.user.value] : []),
             .success, .success, .success, .status,
         ])
         let client = KopiaClient(processRunner: runner, executableProvider: { fixture.executable })
@@ -128,7 +128,7 @@ struct KopiaClientTests {
         let calls = await runner.invocations
         #expect(calls.count == 7)
         #expect(calls[3].arguments == fixture.bootstrapBaseArguments + [
-            "server", "users", existing ? "set" : "add", "woodsweep@sc-sac-01",
+            "server", "users", existing ? "set" : "add", fixture.context.user.value,
             "--user-password", "machine-password",
         ])
         #expect(calls[4].arguments.contains("refresh"))
@@ -153,13 +153,13 @@ struct KopiaClientTests {
     func removesTemporaryState(fails: Bool) async throws {
         let fixture = try KopiaFixture()
         let configuration = try AppConfiguration(
-            serverURL: fixture.context.serverURL, serverPassword: "password", hostname: "original-name"
+            serverURL: fixture.context.serverURL, serverPassword: "password", deviceID: UUID()
         )
         let recorder = TemporaryHomeRecorder()
         do {
             try await KopiaContext.withTemporaryHome(configuration: configuration) { context in
                 await recorder.record(context.homeURL)
-                #expect(context.hostname == "original-name")
+                #expect(context.user == configuration.user)
                 #expect(FileManager.default.fileExists(atPath: context.homeURL.path))
                 if fails {
                     throw CocoaError(.fileReadUnknown)
@@ -273,54 +273,33 @@ struct KopiaClientTests {
         #expect(FileManager.default.fileExists(atPath: nestedFile.path))
     }
 
-    @Test("context normalizes URL and hostname and rejects non-system TLS")
-    func validatesContextIdentity() throws {
+    @Test("hostname changes keep the connection and credential but change the snapshot source")
+    func snapshotsUnderCurrentHostname() async throws {
         let fixture = try KopiaFixture()
-
-        #expect(fixture.context.serverURL
-            == "https://kopia.example.test:51515")
-        #expect(fixture.context.hostname == "sc-sac-01")
-        #expect(fixture.context.user.value == "woodsweep@sc-sac-01")
-
-        for serverURL in [
-            "http://kopia.example.test:51515",
-            "https://user@kopia.example.test:51515",
-            "https://kopia.example.test:51515?fingerprint=abc",
-        ] {
-            #expect(throws: AppConfiguration.Error.invalidServerURL) {
-                try KopiaContext(
-                    serverURL: serverURL,
-                    serverPassword: "machine-password",
-                    hostname: "sc-sac-01",
-                    homeURL: fixture.homeDirectory
-                )
-            }
+        try fixture.writeRepositoryConfig()
+        let runner = RecordingProcessRunner(results: [.status, .success, .status, .success])
+        let hostnames = ["SACS-MacBook-Air.local", "SC-SAC-01.example.test"]
+        for hostname in hostnames {
+            let client = KopiaClient(
+                processRunner: runner,
+                executableProvider: { fixture.executable },
+                hostnameProvider: { hostname }
+            )
+            try await client.prepare(fixture.context)
+            try await client.snapshot(homeURL: fixture.homeDirectory, context: fixture.context)
         }
-    }
 
-    @Test("snapshot has the resolved home as its only source")
-    func snapshotsOnlyResolvedHome() async throws {
-        let fixture = try KopiaFixture()
-        let runner = RecordingProcessRunner(results: [.success])
-        let client = KopiaClient(
-            processRunner: runner,
-            executableProvider: { fixture.executable }
-        )
-
-        try await client.snapshot(
-            homeURL: fixture.homeDirectory,
-            context: fixture.context
-        )
-
-        let invocation = try #require(await runner.invocations.first)
-        #expect(invocation.arguments == fixture.baseArguments + [
-            "snapshot", "create", fixture.homeDirectory.path,
-        ])
-        #expect(
-            invocation.arguments.filter {
-                $0 == fixture.homeDirectory.path
-            }.count == 1
-        )
+        let calls = await runner.invocations
+        #expect(calls.count == 4)
+        for (index, hostname) in ["sacs-macbook-air", "sc-sac-01"].enumerated() {
+            #expect(calls[index * 2].arguments == fixture.baseArguments + [
+                "repository", "status", "--json",
+            ])
+            #expect(calls[index * 2 + 1].arguments == fixture.baseArguments + [
+                "snapshot", "create", fixture.homeDirectory.path,
+                "--override-source", "\(fixture.context.user.username)@\(hostname):\(fixture.homeDirectory.path)",
+            ])
+        }
     }
 
     @Test("nonzero status reports trimmed stderr without arguments")
@@ -487,12 +466,12 @@ private final class KopiaFixture: @unchecked Sendable {
             at: outsideDirectory,
             withIntermediateDirectories: false
         )
-        let context = try KopiaContext(
+        let configuration = try AppConfiguration(
             serverURL: "https://kopia.example.test:51515/",
             serverPassword: "machine-password",
-            hostname: "SC-SAC-01.example.test",
-            homeURL: homeDirectory
+            deviceID: UUID(uuidString: "00000000-0000-4000-8000-000000000001")!
         )
+        let context = try KopiaContext(configuration: configuration, homeURL: homeDirectory)
         self.root = root
         self.homeDirectory = context.homeURL
         self.outsideDirectory = outsideDirectory
@@ -522,8 +501,8 @@ private final class KopiaFixture: @unchecked Sendable {
                 "url": serverURL,
                 "serverCertFingerprint": fingerprint,
             ],
-            "hostname": "sc-sac-01",
-            "username": "woodsweep",
+            "hostname": context.user.hostname,
+            "username": context.user.username,
         ])
         try data.write(to: destination)
     }

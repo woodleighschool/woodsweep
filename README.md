@@ -20,7 +20,9 @@ sudo /Applications/WoodSweep.app/Contents/MacOS/WoodSweep bootstrap \
   --bootstrap-password "BOOTSTRAP_PASSWORD"
 ```
 
-Bootstrap stores the server URL, machine identity, and generated password together in the System keychain, then provisions the Kopia user. The bootstrap credential is transient. Re-running bootstrap reuses the stored identity and password, including after an interrupted run or a hostname change. A working enrollment does not change the server.
+Bootstrap generates a device ID and password, stores them with the server URL in the System keychain, then provisions the Kopia account `<device-id>@woodsweep`. It does not depend on the Mac’s hostname or a login session. The bootstrap credential is transient. Re-running bootstrap reuses the stored device ID and password, including after an interrupted run. A working enrollment does not change the server.
+
+Each snapshot reads the current hostname and records its source as `<device-id>@<hostname>:/Users/<username>`. Renaming a Mac keeps the same credential and connection. Existing snapshots retain their original hostname.
 
 The System keychain trusts the app that creates the item through its code signature. Use the signed app for both bootstrap and normal operation, and keep its signing identity consistent across releases. This uses macOS's file-based keychain because enrollment must work outside a login session.
 
@@ -30,7 +32,7 @@ Check enrollment and the repository connection without starting a reset:
 /Applications/WoodSweep.app/Contents/MacOS/WoodSweep status
 ```
 
-`status` works as root or as a user, reports the server and machine identity without printing credentials, and exits nonzero on failure. It checks repository access; it does not certify Full Disk Access or reset readiness for a particular home. Setup and status use temporary Kopia state, removed on exit. The app maintains its own repository connection settings inside the logged-in user's home.
+`status` works as root or as a user, reports the server, device account, and current hostname without printing credentials, and exits nonzero on failure. It checks repository access; it does not certify Full Disk Access or reset readiness for a particular home. Setup and status use temporary Kopia state, removed on exit. The app maintains its own repository connection settings inside the logged-in user's home.
 
 An MDM install hook can invoke bootstrap directly as root. No console user is required. Intune's post-install hook reports the app as installed even if bootstrap fails; use `status` to diagnose enrollment and rerun bootstrap to repair it.
 
@@ -51,6 +53,20 @@ kopia server acl add \
   --access FULL \
   --target type=user
 ```
+
+Allow device accounts to keep their own snapshots and source policies across hostname changes:
+
+```bash
+for manifest_type in snapshot policy; do
+  kopia server acl add \
+    --overwrite \
+    --user '*@woodsweep' \
+    --access FULL \
+    --target "type=${manifest_type},username=OWN_USER"
+done
+```
+
+These rules scope access by device ID rather than the snapshot hostname. Each device can access its own sources under any hostname.
 
 The server control API must use the same bootstrap identity so the app can refresh Kopia’s user cache after provisioning a machine account.
 

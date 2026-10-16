@@ -58,6 +58,14 @@ kopia server acl add \
     --access FULL \
     --target type=user
 
+for manifest_type in snapshot policy; do
+    kopia server acl add \
+        --overwrite \
+        --user '*@woodsweep' \
+        --access FULL \
+        --target "type=${manifest_type},username=OWN_USER"
+done
+
 exec kopia server start \
     --address 127.0.0.1:51515 \
     --tls-cert-file "${tls_cert_file}" \

@@ -20,9 +20,9 @@ nonisolated struct AppConfiguration: Codable, Equatable, Sendable {
 
     let serverURL: String
     let serverPassword: String
-    let hostname: String
+    let deviceID: UUID
 
-    init(serverURL: String, serverPassword: String, hostname: String) throws {
+    init(serverURL: String, serverPassword: String, deviceID: UUID) throws {
         guard var components = URLComponents(string: serverURL.trimmingCharacters(in: .whitespacesAndNewlines)),
               components.scheme?.lowercased() == "https",
               components.host?.isEmpty == false,
@@ -46,7 +46,14 @@ nonisolated struct AppConfiguration: Codable, Equatable, Sendable {
         }
         self.serverURL = url.absoluteString
         self.serverPassword = serverPassword
-        self.hostname = try KopiaHostname.normalized(hostname)
+        self.deviceID = deviceID
+    }
+
+    var user: KopiaUser {
+        guard let user = KopiaUser("\(deviceID.uuidString.lowercased())@woodsweep") else {
+            preconditionFailure("Device ID must form a valid Kopia user")
+        }
+        return user
     }
 
     init(from decoder: any Decoder) throws {
@@ -54,7 +61,7 @@ nonisolated struct AppConfiguration: Codable, Equatable, Sendable {
         try self.init(
             serverURL: values.decode(String.self, forKey: .serverURL),
             serverPassword: values.decode(String.self, forKey: .serverPassword),
-            hostname: values.decode(String.self, forKey: .hostname)
+            deviceID: values.decode(UUID.self, forKey: .deviceID)
         )
     }
 }

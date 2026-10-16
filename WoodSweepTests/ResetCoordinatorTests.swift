@@ -420,7 +420,7 @@ private final class CoordinatorFixture {
         let configuration = try AppConfiguration(
             serverURL: "https://kopia.example.test:51515",
             serverPassword: "machine-password",
-            hostname: "sc-sac-01"
+            deviceID: UUID()
         )
         officeApplications = FakeOfficeApplications(
             events: events,

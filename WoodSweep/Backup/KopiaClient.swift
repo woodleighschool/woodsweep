@@ -69,19 +69,10 @@ nonisolated struct KopiaBootstrapCredentials: Equatable, Sendable {
 }
 
 nonisolated struct KopiaContext: Equatable, Sendable {
-    static let username = "woodsweep"
-
     let serverURL: String
     let serverPassword: String
-    let hostname: String
+    let user: KopiaUser
     let homeURL: URL
-
-    var user: KopiaUser {
-        guard let user = KopiaUser("\(Self.username)@\(hostname)") else {
-            preconditionFailure("Validated Kopia identity became invalid")
-        }
-        return user
-    }
 
     var configFile: URL {
         homeURL.appending(
@@ -103,21 +94,11 @@ nonisolated struct KopiaContext: Equatable, Sendable {
         )
     }
 
-    init(
-        serverURL: String,
-        serverPassword: String,
-        hostname: String,
-        homeURL: URL
-    ) throws {
-        let configuration = try AppConfiguration(
-            serverURL: serverURL,
-            serverPassword: serverPassword,
-            hostname: hostname
-        )
+    init(configuration: AppConfiguration, homeURL: URL) throws {
         let scope = try HomeScope(homeURL: homeURL)
-        self.serverURL = configuration.serverURL
-        self.serverPassword = configuration.serverPassword
-        self.hostname = configuration.hostname
+        serverURL = configuration.serverURL
+        serverPassword = configuration.serverPassword
+        user = configuration.user
         self.homeURL = scope.canonicalHomeURL
     }
 }
@@ -128,9 +109,7 @@ extension KopiaContext {
         targetAccount: TargetAccount
     ) throws {
         try self.init(
-            serverURL: configuration.serverURL,
-            serverPassword: configuration.serverPassword,
-            hostname: configuration.hostname,
+            configuration: configuration,
             homeURL: targetAccount.homeURL
         )
     }
@@ -154,9 +133,7 @@ extension KopiaContext {
             }
         }
         let context = try KopiaContext(
-            serverURL: configuration.serverURL,
-            serverPassword: configuration.serverPassword,
-            hostname: configuration.hostname,
+            configuration: configuration,
             homeURL: directory
         )
         try await operation(context)
@@ -197,15 +174,18 @@ actor KopiaClient: KopiaServicing {
 
     private let processRunner: any ProcessRunning
     private let executableProvider: @Sendable () throws -> URL
+    private let hostnameProvider: @Sendable () throws -> String
     private var operationActive = false
     private var operationWaiters: [CheckedContinuation<Void, Never>] = []
 
     init(
         processRunner: any ProcessRunning,
-        executableProvider: @escaping @Sendable () throws -> URL
+        executableProvider: @escaping @Sendable () throws -> URL,
+        hostnameProvider: @escaping @Sendable () throws -> String = KopiaHostname.current
     ) {
         self.processRunner = processRunner
         self.executableProvider = executableProvider
+        self.hostnameProvider = hostnameProvider
     }
 
     func bootstrap(
@@ -323,10 +303,12 @@ actor KopiaClient: KopiaServicing {
         await acquireOperation()
         defer { releaseOperation() }
         try Task.checkCancellation()
+        let hostname = try KopiaHostname.normalized(hostnameProvider())
         try await execute(
             command: "snapshot create",
             arguments: baseArguments(context) + [
                 "snapshot", "create", homeURL.path,
+                "--override-source", "\(context.user.username)@\(hostname):\(homeURL.path)",
             ]
         )
     }

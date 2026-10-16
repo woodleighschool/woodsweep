@@ -5,6 +5,8 @@ import Testing
 
 @Suite("Bootstrap")
 struct BootstrapTests {
+    private let deviceID = UUID(uuidString: "00000000-0000-4000-8000-000000000001")!
+
     @Test("first enrollment saves the complete machine credential before contacting the server")
     func enrollsMachine() async throws {
         let store = MemoryCredentialStore()
@@ -14,8 +16,9 @@ struct BootstrapTests {
         }.run(arguments: arguments())
 
         #expect(configuration.serverURL == "https://kopia.example.test:443")
-        #expect(configuration.hostname == "exam-01")
+        #expect(configuration.deviceID == deviceID)
         #expect(configuration.serverPassword == "machine-password")
+        #expect(configuration.user.value == "00000000-0000-4000-8000-000000000001@woodsweep")
     }
 
     @Test("rerunning after an interrupted bootstrap retains the credential and identity")
@@ -31,7 +34,7 @@ struct BootstrapTests {
         let retry = BootstrapCommand(
             credentials: store,
             isRoot: { true },
-            hostname: { throw TestError.mustNotCall },
+            generateDeviceID: { Issue.record("Device ID must not be regenerated"); return UUID() },
             generatePassword: { throw TestError.mustNotCall },
             bootstrapRepository: { _, configuration in
                 #expect(configuration == saved)
@@ -58,7 +61,7 @@ struct BootstrapTests {
         let command = BootstrapCommand(
             credentials: store,
             isRoot: { false },
-            hostname: { throw TestError.mustNotCall },
+            generateDeviceID: { Issue.record("Device ID must not be regenerated"); return UUID() },
             generatePassword: { throw TestError.mustNotCall },
             bootstrapRepository: { _, _ in Issue.record("Server must not be called") }
         )
@@ -73,26 +76,27 @@ struct BootstrapTests {
     func changesServer() async throws {
         let store = MemoryCredentialStore()
         store.configuration = try AppConfiguration(
-            serverURL: "https://old.example.test:51515", serverPassword: "existing", hostname: "original"
+            serverURL: "https://old.example.test:51515", serverPassword: "existing", deviceID: deviceID
         )
         let configuration = try await command(store: store) { configuration in
             #expect(store.configuration == configuration)
         }.run(arguments: arguments())
         #expect(configuration.serverPassword == "existing")
-        #expect(configuration.hostname == "original")
+        #expect(configuration.deviceID == deviceID)
         #expect(configuration.serverURL == "https://kopia.example.test:443")
     }
 
     @Test("configuration round trips as one validated record")
     func validatesConfiguration() throws {
         let configuration = try AppConfiguration(
-            serverURL: " https://kopia.example.test/ ", serverPassword: "password", hostname: "EXAM-01.example.test"
+            serverURL: " https://kopia.example.test/ ", serverPassword: "password", deviceID: deviceID
         )
         let data = try JSONEncoder().encode(configuration)
+        #expect(!String(decoding: data, as: UTF8.self).contains("hostname"))
         #expect(try JSONDecoder().decode(AppConfiguration.self, from: data) == configuration)
         for url in ["http://kopia.example.test", "https://user@kopia.example.test", "https://kopia.example.test:0", "https://kopia.example.test:65536", "https://kopia.example.test/path", "https://kopia.example.test?x=y"] {
             #expect(throws: AppConfiguration.Error.invalidServerURL) {
-                try AppConfiguration(serverURL: url, serverPassword: "password", hostname: "exam-01")
+                try AppConfiguration(serverURL: url, serverPassword: "password", deviceID: deviceID)
             }
         }
         #expect(throws: AppConfiguration.Error.notBootstrapped) {
@@ -126,7 +130,7 @@ struct BootstrapTests {
         BootstrapCommand(
             credentials: store,
             isRoot: { true },
-            hostname: { "EXAM-01.example.test" },
+            generateDeviceID: { deviceID },
             generatePassword: { "machine-password" },
             bootstrapRepository: { credentials, configuration in
                 #expect(credentials.user.value == "bootstrap@woodsweep")

@@ -18,7 +18,7 @@ struct WoodSweepCLI: AsyncParsableCommand {
 
         mutating func run() async throws {
             let configuration = try await BootstrapCommand.live.run(arguments: options)
-            print("Configured woodsweep@\(configuration.hostname) at \(configuration.serverURL).")
+            print("Configured \(configuration.user.value) at \(configuration.serverURL).")
         }
     }
 
@@ -30,7 +30,8 @@ struct WoodSweepCLI: AsyncParsableCommand {
         mutating func run() async throws {
             let configuration = try AppConfigurationStore().load()
             print("Server: \(configuration.serverURL)")
-            print("Identity: woodsweep@\(configuration.hostname)")
+            print("Account: \(configuration.user.value)")
+            try print("Hostname: \(KopiaHostname.current())")
             print("Credential: available in System keychain")
             let clock = ContinuousClock()
             let start = clock.now
