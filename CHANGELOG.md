@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.7](https://github.com/woodleighschool/woodsweep/compare/v0.2.6...v0.2.7) (2026-10-16)
+
+
+### Bug Fixes
+
+* **bootstrap:** separate device credentials from hostnames ([6322c50](https://github.com/woodleighschool/woodsweep/commit/6322c5044f22b890f2a21c818c1dddba41b3b4df))
+* **process:** await termination without blocking a run loop ([6a3de1b](https://github.com/woodleighschool/woodsweep/commit/6a3de1bf8b263ae8ede87fac216f1fafb63f13fb))
+
 ## [0.2.6](https://github.com/woodleighschool/woodsweep/compare/v0.2.5...v0.2.6) (2026-10-13)
 
 
