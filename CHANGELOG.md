@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.8](https://github.com/woodleighschool/woodsweep/compare/v0.2.7...v0.2.8) (2026-10-16)
+
+
+### Bug Fixes
+
+* **bootstrap:** replace unreadable enrollment records ([02d1b35](https://github.com/woodleighschool/woodsweep/commit/02d1b356c532ba2d3dc352a3488020dd8e33eb9c))
+
 ## [0.2.7](https://github.com/woodleighschool/woodsweep/compare/v0.2.6...v0.2.7) (2026-10-16)
 
 
