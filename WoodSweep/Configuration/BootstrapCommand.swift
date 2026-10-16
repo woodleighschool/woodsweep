@@ -27,7 +27,12 @@ nonisolated struct BootstrapCommand: Sendable {
         guard isRoot() else {
             throw Error.requiresRoot
         }
-        let stored = try credentials.load()
+        let stored: AppConfiguration?
+        do {
+            stored = try credentials.load()
+        } catch is DecodingError {
+            stored = nil
+        }
         let configuration = try AppConfiguration(
             serverURL: arguments.serverURL,
             serverPassword: stored?.serverPassword ?? generatePassword(),

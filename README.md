@@ -20,7 +20,7 @@ sudo /Applications/WoodSweep.app/Contents/MacOS/WoodSweep bootstrap \
   --bootstrap-password "BOOTSTRAP_PASSWORD"
 ```
 
-Bootstrap generates a device ID and password, stores them with the server URL in the System keychain, then provisions the Kopia account `<device-id>@woodsweep`. It does not depend on the Mac’s hostname or a login session. The bootstrap credential is transient. Re-running bootstrap reuses the stored device ID and password, including after an interrupted run. A working enrollment does not change the server.
+Bootstrap generates a device ID and password, stores them with the server URL in the System keychain, then provisions the Kopia account `<device-id>@woodsweep`. It does not depend on the Mac’s hostname or a login session. The bootstrap credential is transient. Re-running bootstrap reuses the stored device ID and password, including after an interrupted run. An unreadable enrollment record is replaced before provisioning; a Keychain access failure stops setup. A working enrollment does not change the server.
 
 Each snapshot reads the current hostname and records its source as `<device-id>@<hostname>:/Users/<username>`. Renaming a Mac keeps the same credential and connection. Existing snapshots retain their original hostname.
 

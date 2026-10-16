@@ -55,6 +55,38 @@ struct BootstrapTests {
         #expect(store.configuration == nil)
     }
 
+    @Test("an unreadable enrollment is replaced before provisioning")
+    func repairsUnreadableEnrollment() async throws {
+        let store = MemoryCredentialStore()
+        store.readError = DecodingError.dataCorrupted(.init(
+            codingPath: [], debugDescription: "Unreadable stored enrollment"
+        ))
+
+        let configuration = try await command(store: store) { configuration in
+            #expect(store.configuration == configuration)
+            #expect(store.writes == 1)
+        }.run(arguments: arguments())
+
+        #expect(configuration.deviceID == deviceID)
+        #expect(configuration.serverPassword == "machine-password")
+        store.readError = nil
+        #expect(try await command(store: store) { _ in }
+            .run(arguments: arguments()) == configuration)
+        #expect(store.writes == 1)
+    }
+
+    @Test("a credential access failure stops enrollment without replacing it")
+    func stopsOnCredentialAccessFailure() async throws {
+        let store = MemoryCredentialStore()
+        store.readError = TestError.storeUnavailable
+        await #expect(throws: TestError.storeUnavailable) {
+            try await command(store: store) { _ in Issue.record("Server must not be called") }
+                .run(arguments: arguments())
+        }
+        #expect(store.reads == 1)
+        #expect(store.writes == 0)
+    }
+
     @Test("bootstrap requires root before reading or writing credentials")
     func rejectsNonRoot() async throws {
         let store = MemoryCredentialStore()
@@ -151,10 +183,14 @@ private final class MemoryCredentialStore: CredentialStoring, @unchecked Sendabl
     var configuration: AppConfiguration?
     var reads = 0
     var writes = 0
+    var readError: (any Error)?
     var writeError: (any Error)?
 
     func load() throws -> AppConfiguration? {
         reads += 1
+        if let readError {
+            throw readError
+        }
         return configuration
     }
 
