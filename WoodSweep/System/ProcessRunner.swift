@@ -39,6 +39,15 @@ nonisolated struct ProcessRunner: ProcessRunning {
         process.arguments = arguments
         process.standardOutput = standardOutput
         process.standardError = standardError
+        let (termination, continuation) = AsyncStream<Int32>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        process.terminationHandler = { process in
+            continuation.yield(process.terminationStatus)
+            continuation.finish()
+        }
+        defer {
+            process.terminationHandler = nil
+            continuation.finish()
+        }
 
         return try await withTaskCancellationHandler {
             try Task.checkCancellation()
@@ -73,9 +82,9 @@ nonisolated struct ProcessRunner: ProcessRunning {
                 kill(process.processIdentifier, SIGKILL)
             }
 
-            let terminationStatus = try await Self.blocking {
-                process.waitUntilExit()
-                return process.terminationStatus
+            var iterator = termination.makeAsyncIterator()
+            guard let terminationStatus = await iterator.next() else {
+                throw CancellationError()
             }
             timeoutTask.cancel()
             let timedOut = await timeoutTask.value
@@ -97,7 +106,7 @@ nonisolated struct ProcessRunner: ProcessRunning {
         }
     }
 
-    /// Pipe reads and process waits must not occupy Swift's cooperative worker threads.
+    /// Pipe reads must not occupy Swift's cooperative worker threads.
     private static func blocking<Value: Sendable>(
         _ operation: @escaping @Sendable () throws -> Value
     ) async throws -> Value {

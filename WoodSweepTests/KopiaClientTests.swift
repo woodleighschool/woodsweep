@@ -352,6 +352,28 @@ struct KopiaClientTests {
 
 @Suite("Process runner")
 struct ProcessRunnerTests {
+    @Test("collects exit status from immediately exiting processes")
+    func collectsImmediateExit() async throws {
+        for _ in 0 ..< 10 {
+            let result = try await ProcessRunner().run(
+                executable: URL(filePath: "/bin/sh"), arguments: ["-c", "exit 7"]
+            )
+            #expect(result.terminationStatus == 7)
+        }
+    }
+
+    @Test("cancellation terminates the child and returns promptly")
+    func cancelsProcess() async throws {
+        let start = ContinuousClock.now
+        let task = Task {
+            try await ProcessRunner().run(executable: URL(filePath: "/bin/sleep"), arguments: ["5"])
+        }
+        try await Task.sleep(for: .milliseconds(100))
+        task.cancel()
+        await #expect(throws: CancellationError.self) { try await task.value }
+        #expect(start.duration(to: .now) < .seconds(3))
+    }
+
     @Test("terminates a process that exceeds its deadline")
     func boundsExecutionTime() async throws {
         let start = ContinuousClock.now
