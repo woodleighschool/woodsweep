@@ -174,20 +174,11 @@ final class ResetCoordinator {
             preconditionFailure("Cleanup requires a successful snapshot")
         }
 
-        guard await reset(.word, operation: .resettingWord, in: scope) else {
-            return
-        }
-        guard await reset(.excel, operation: .resettingExcel, in: scope) else {
-            return
-        }
-        guard await reset(
+        guard await reset(.word, operation: .resettingWord, in: scope), await reset(.excel, operation: .resettingExcel, in: scope), await reset(
             .powerPoint,
             operation: .resettingPowerPoint,
             in: scope
-        ) else {
-            return
-        }
-        guard await reconcileHome(scope) else {
+        ), await reconcileHome(scope) else {
             return
         }
 
