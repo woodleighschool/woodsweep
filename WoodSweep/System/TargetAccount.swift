@@ -117,10 +117,7 @@ nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
 
     private func isRealDirectory(_ url: URL) throws -> Bool {
         var info = stat()
-        guard Darwin.lstat(url.path, &info) == 0 else {
-            return false
-        }
-        guard info.st_mode & S_IFMT != S_IFLNK else {
+        guard Darwin.lstat(url.path, &info) == 0, info.st_mode & S_IFMT != S_IFLNK else {
             return false
         }
         return info.st_mode & S_IFMT == S_IFDIR
