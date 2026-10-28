@@ -11,14 +11,15 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   release:
     name: macOS release
     runs-on: xcode-27
     timeout-minutes: 15
+    permissions:
+      contents: write
     env:
       RELEASE_TAG: ${{ github.event.release.tag_name }}
       APP_NAME: WoodSweep
