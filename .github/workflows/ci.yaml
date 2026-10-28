@@ -34,6 +34,7 @@ jobs:
       && github.event.pull_request.head.repo.full_name == github.repository) }}
     name: Workflow Lint
     runs-on: ubuntu-26.04
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -101,6 +102,7 @@ jobs:
       - workflow-lint
       - app
     runs-on: ubuntu-26.04
+    timeout-minutes: 15
     permissions: {}
     steps:
       - name: Any jobs failed?

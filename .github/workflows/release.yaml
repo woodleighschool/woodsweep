@@ -18,6 +18,7 @@ jobs:
   release:
     name: macOS release
     runs-on: xcode-27
+    timeout-minutes: 15
     env:
       RELEASE_TAG: ${{ github.event.release.tag_name }}
       APP_NAME: WoodSweep
