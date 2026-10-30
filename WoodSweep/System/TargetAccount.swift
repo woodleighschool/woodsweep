@@ -54,11 +54,11 @@ nonisolated struct SystemTargetAccountResolver: TargetAccountResolving {
         var userID: uid_t = 0
         var groupID: gid_t = 0
         guard let consoleUser = SCDynamicStoreCopyConsoleUser(
-            nil,
-            &userID,
-            &groupID
-        ) as String?,
-            consoleUser == username
+                  nil,
+                  &userID,
+                  &groupID
+              ) as String?,
+              consoleUser == username
         else {
             throw Error.notConsoleUser
         }
