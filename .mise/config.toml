@@ -14,11 +14,9 @@ pin = true
 lockfile = true
 
 [tasks.format]
-description = "Format Swift code"
 run = "swiftformat WoodSweep WoodSweepTests"
 
 [tasks.fmt-check]
-description = "Check Swift formatting"
 run = "swiftformat WoodSweep WoodSweepTests --lint"
 
 [tasks.build]
@@ -47,7 +45,7 @@ periphery scan \
 """
 
 [tasks.test]
-description = "Run focused Swift tests"
+description = "Run the macOS test suite"
 run = """
 xcodebuild test \
   -project WoodSweep.xcodeproj \
@@ -81,7 +79,7 @@ description = "Lint repository shell scripts"
 run = "shellcheck scripts/*.sh"
 
 [tasks.lint]
-description = "Run app and repository linters"
+description = "Check Swift code and shell scripts"
 depends = ["shell-lint", "periphery"]
 
 [hooks]
