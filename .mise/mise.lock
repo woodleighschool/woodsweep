@@ -88,12 +88,6 @@ checksum = "sha256:c8af0df44bce04359794dad8ea28d750437411d632748049d08644ffb66a6
 url = "https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-darwin-arm64"
 url_api = "https://api.github.com/repos/FiloSottile/mkcert/releases/assets/63709954"
 
-[[tools."npm:@commitlint/cli"]]
-version = "21.2.4"
-aube = { path = "locks/npm-commitlint-cli/21.2.4", digest = "sha256:48fedb46245a75b8595bdadc68ea61f818257ad573d593ea24ba36cc5ec719e9" }
-backend = "npm:@commitlint/cli"
-specifiers = ["21.2.4"]
-
 [[tools.oxfmt]]
 version = "0.75.0"
 aube = { path = "locks/oxfmt/0.75.0", digest = "sha256:1d4f470a5dbba272218132db6ff9ba1911075d29dcd3253a0e02b4a5037a8a23" }

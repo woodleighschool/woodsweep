@@ -7,6 +7,3 @@ configs = ["lefthook.common.toml"]
 glob = ["*.swift"]
 run = "swiftformat {staged_files}"
 stage_fixed = true
-
-[commit-msg.commands.commitlint]
-run = "commitlint --default-config --edit {1}"
