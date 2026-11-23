@@ -20,7 +20,7 @@ run = "swiftformat WoodSweep WoodSweepTests"
 run = "swiftformat WoodSweep WoodSweepTests --lint"
 
 [tasks.build]
-description = "Build the unsigned macOS app"
+description = "Unsigned"
 run = """
 xcodebuild build \
   -project WoodSweep.xcodeproj \
@@ -30,7 +30,6 @@ xcodebuild build \
 """
 
 [tasks.periphery]
-description = "Build the app and reject unused Swift code"
 run = """
 periphery scan \
   --project WoodSweep.xcodeproj \
@@ -45,7 +44,6 @@ periphery scan \
 """
 
 [tasks.test]
-description = "Run the macOS test suite"
 run = """
 xcodebuild test \
   -project WoodSweep.xcodeproj \
@@ -55,7 +53,6 @@ xcodebuild test \
 """
 
 [tasks.dev-tls]
-description = "Create a local TLS certificate for the Kopia test server"
 run = """
 mkdir -p .local/tls/ca
 CAROOT="$PWD/.local/tls/ca" mkcert \
@@ -65,21 +62,18 @@ CAROOT="$PWD/.local/tls/ca" mkcert \
 """
 
 [tasks.dev-tls-trust]
-description = "Trust the local Kopia test CA in the macOS login Keychain"
+description = "Changes login Keychain"
 depends = ["dev-tls"]
 run = 'CAROOT="$PWD/.local/tls/ca" mkcert -install'
 
 [tasks.kopia-server]
-description = "Run the local Kopia Repository Server in the foreground"
 depends = ["dev-tls"]
 run = "./scripts/start-kopia-server.sh"
 
 [tasks.shell-lint]
-description = "Lint repository shell scripts"
 run = "shellcheck scripts/*.sh"
 
 [tasks.lint]
-description = "Check Swift code and shell scripts"
 depends = ["shell-lint", "periphery"]
 
 [hooks]
